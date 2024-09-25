@@ -10,6 +10,7 @@ import Vuetify from './vuetify';
 import router from './router';
 import vuex from './store/store';
 import moment from 'moment';
+import debounce from 'lodash/debounce';
 
 /**
  * Next, we will create a fresh Vue application instance. You may then begin
@@ -23,7 +24,9 @@ const app = createApp({});
 app.use(Vuetify);
 app.use(router);
 app.use(vuex);
+
 app.config.globalProperties.$moment=moment;
+app.config.globalProperties.$debounce=debounce;
 
 app.config.globalProperties.$filters = {
 	uppercase(str) {

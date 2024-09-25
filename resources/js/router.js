@@ -4,7 +4,6 @@ import _404 from './components/_404.vue'
 import MainBody from './components/MainBody.vue'
 import Login from './components/auth/Login.vue'
 import Register from './components/register/Index.vue'
-import LinkToQrCode from './components/link/LinkToQrCode.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -12,7 +11,39 @@ const router = createRouter({
     	{
     		path: "/",
             name: 'home',
-    		component: MainBody
+    		component: MainBody,
+            children: [
+                {
+                    path: 'product-lines',
+                    name: 'productLines',
+                    component: () => import('./components/product-lines/Index.vue'),
+                    meta: {displayName: 'Product lines'},
+                },
+                {
+                    path: 'products',
+                    name: 'products',
+                    component: () => import('./components/products/Index.vue'),
+                    meta: {displayName: 'Products'},
+                },
+                {
+                    path: 'sales-representatives',
+                    name: 'salesRepresentatives',
+                    component: () => import('./components/sales-representatives/Index.vue'),
+                    meta: {displayName: 'Sales representatives'},
+                },
+                {
+                    path: 'customers',
+                    name: 'customers',
+                    component: () => import('./components/customers/Index.vue'),
+                    meta: {displayName: 'Customers'},
+                },
+                {
+                    path: 'quotations',
+                    name: 'quotations',
+                    component: () => import('./components/quotations/Index.vue'),
+                    meta: {displayName: 'Quotations'},
+                },
+            ]
     	},
     	{
     		path: "/login",

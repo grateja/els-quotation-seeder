@@ -4,9 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccountsController;
-use App\Http\Controllers\QrCodeController;
-use App\Http\Controllers\ShopsController;
-use App\Http\Controllers\SyncController;
+use App\Http\Controllers\CustomersController;
+use App\Http\Controllers\ProductLinesController;
+use App\Http\Controllers\SalesRepresentativeController;
 
 use App\Http\Controllers\TestController;
 
@@ -33,4 +33,44 @@ Route::prefix('auth')->middleware('auth:sanctum')->controller(AuthController::cl
 
     // /api/auth/check
     Route::get('check', 'check');
+});
+
+
+// /api/product-lines
+Route::prefix('product-lines')->middleware('auth:sanctum')->controller(ProductLinesController::class)->group(function() {
+    Route::get('/', 'index');
+});
+
+// /api/sales-representatives
+Route::prefix('sales-representatives')->middleware('auth:sanctum')->controller(SalesRepresentativeController::class)->group(function() {
+    Route::get('/', 'index');
+
+    // /api/customers/create
+    Route::post('create', 'store');
+
+    // /api/sales-representativess/{id}/update
+    Route::post('{id}/update', 'update');
+
+    // /api/sales-representativess/{id}
+    Route::get('{id}', 'show');
+
+    // /api/customers/{id}
+    Route::delete('{id}', 'destroy');
+});
+
+// /api/customers
+Route::prefix('customers')->middleware('auth:sanctum')->controller(CustomersController::class)->group(function() {
+    Route::get('/', 'index');
+
+    // /api/customers/generate-crn
+    Route::get('generate-crn', 'generateCRN');
+
+    // /api/customers/create
+    Route::post('create', 'store');
+
+    // /api/customers/{customerId}/update
+    Route::post('{customerId}/update', 'update');
+
+    // /api/customers/{customerId}
+    Route::delete('{customerId}', 'destroy');
 });

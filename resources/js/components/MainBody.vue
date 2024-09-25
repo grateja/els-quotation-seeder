@@ -1,11 +1,15 @@
 <template>
-	<div>Initial commit
-        <pre>{{currentUser}}</pre>
-        <v-btn @click="logout">logout</v-btn>
-    </div>
+    <v-app>
+        <NavigationDrawer/>
+    </v-app>
 </template>
+
 <script>
+import NavigationDrawer from './layout/NavigationDrawer.vue';
 	export default {
+        components: {
+            NavigationDrawer
+        },
         methods: {
             logout() {
                 this.$store.dispatch('auth/logout').then((res, rej) => {

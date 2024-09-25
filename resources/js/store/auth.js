@@ -7,6 +7,7 @@ export default {
             context.commit('setLoading', 'logging-in', {root: true});
             context.commit('clearErrors', null, {root: true});
             axios.post('/api/auth/login', data).then((res, rej) => {
+                context.commit('setUser', res.data.user, {root: true});
                 // localStorage.setItem('sanctumToken', res.data.token.plainTextToken);
                 // localStorage.setItem('tokenName', res.data.token.accessToken.name);
                 return res;

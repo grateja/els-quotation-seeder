@@ -5,7 +5,8 @@ store.dispatch('get', {
     tag: 'check',
     url: '/api/auth/check',
 }).then((res, rej) => {
-    console.log(res.data);
+    console.log(res.data)
+    store.commit('setUser', res.data, {root: true})
 }).catch(err => {
     if(err.response && err.response.status == 401) {
         console.log(err)

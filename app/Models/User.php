@@ -47,8 +47,8 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function shops() {
-        return $this->belongsToMany(Shop::class);
+    public function quotations() {
+        return $this->hasMany(Quotation::class);
     }
 
     public function createToken(string $name, array $abilities = ['*'], $expiresAt = null, string $userId = null) {
