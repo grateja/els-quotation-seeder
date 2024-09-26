@@ -5,7 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\CustomersController;
+use App\Http\Controllers\ProductBulletsController;
 use App\Http\Controllers\ProductLinesController;
+use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SalesRepresentativeController;
 
 use App\Http\Controllers\TestController;
@@ -39,13 +41,55 @@ Route::prefix('auth')->middleware('auth:sanctum')->controller(AuthController::cl
 // /api/product-lines
 Route::prefix('product-lines')->middleware('auth:sanctum')->controller(ProductLinesController::class)->group(function() {
     Route::get('/', 'index');
+
+    // /api/product-lines/{id}/full
+    Route::get('{id}/full', 'full');
 });
+
+// /api/products
+Route::prefix('products')->middleware('auth:sanctum')->controller(ProductsController::class)->group(function() {
+    Route::get('{productLineId}', 'index');
+
+    // /api/products/{productId}/details
+    Route::get('{productId}/details', 'show');
+
+    // /api/product/create
+    Route::post('create', 'store');
+
+    // /api/products/{id}/update
+    Route::post('{id}/update', 'update');
+
+    // /api/products/{productId}
+    Route::delete('{productId}', 'destroy');
+
+    // /api/products/{productId}/add-bullet
+    Route::post('{productId}/add-bullet', 'addBullet');
+});
+
+// /api/product-bullets
+Route::prefix('product-bullets')->middleware('auth:sanctum')->controller(ProductBulletsController::class)->group(function() {
+    // /api/product-bullets/{productId}/create
+    Route::post('{productId}/create', 'store');
+
+    // /api/product-bullets/{bulletId}/update
+    Route::post('{bulletId}/update', 'update');
+
+    // /api/product-bullets/{bulletId}
+    Route::delete('{bulletId}', 'destroy');
+
+    // /api/product-bullets/{bulletId}/move-up
+    Route::post('{bulletId}/move-up', 'moveUp');
+
+    // /api/product-bullets/{bulletId}/move-down
+    Route::post('{bulletId}/move-down', 'moveDown');
+});
+
 
 // /api/sales-representatives
 Route::prefix('sales-representatives')->middleware('auth:sanctum')->controller(SalesRepresentativeController::class)->group(function() {
     Route::get('/', 'index');
 
-    // /api/customers/create
+    // /api/sales-representative/create
     Route::post('create', 'store');
 
     // /api/sales-representativess/{id}/update
@@ -54,7 +98,7 @@ Route::prefix('sales-representatives')->middleware('auth:sanctum')->controller(S
     // /api/sales-representativess/{id}
     Route::get('{id}', 'show');
 
-    // /api/customers/{id}
+    // /api/sales-representative/{id}
     Route::delete('{id}', 'destroy');
 });
 

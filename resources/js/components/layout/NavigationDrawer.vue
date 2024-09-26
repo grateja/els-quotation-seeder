@@ -34,11 +34,10 @@
         title: 'Home',
       drawer: false,
       items: [
-        { title: 'Product lines', to: 'product-lines' },
-        { title: 'Products', to: 'products' },
-        { title: 'Sales Representative', to: 'sales-representatives' },
-        { title: 'Customers', to: 'customers' },
-        { title: 'Quotations', to: 'quotations' },
+        { title: 'Product lines', to: '/product-lines' },
+        { title: 'Sales Representative', to: '/sales-representatives' },
+        { title: 'Customers', to: '/customers' },
+        { title: 'Quotations', to: '/quotations' },
         // Add more items as needed
       ],
     }),

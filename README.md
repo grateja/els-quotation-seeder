@@ -1,3 +1,1 @@
-<li>Customer list implemented</li>
-<li>Sales Rep. list implemented</li>
-<li></li>
+<li>Product bullet description implemented</li>

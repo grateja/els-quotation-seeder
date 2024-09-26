@@ -1,15 +1,16 @@
 <template>
     <div>
-        <container>
-            <v-row>
+        <v-container>
+            <v-row v-if="$route.params.id == null">
                 <v-col cols="12" sm="6" md="4" lg="3" v-for="productLine in productLines" :key="productLine.id">
-                    <v-card>
+                    <v-card :to="`/product-lines/${productLine.id}`">
                         <v-card-title>{{productLine.name}}</v-card-title>
                         <v-card-text>{{productLine.description}}</v-card-text>
                     </v-card>
                 </v-col>
             </v-row>
-        </container>
+            <router-view v-else />
+        </v-container>
     </div>
   </template>
 

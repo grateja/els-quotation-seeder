@@ -24,12 +24,12 @@ class AuthController extends Controller
                 'email' => ['Email does not exists!']
             ];
         } else if(Hash::check($request->password, $user->password)) {
-            $token = $user->createToken('login', ['basic']);
+            // $token = $user->createToken('login', ['basic']);
 
             Auth::login($user);
 
             return response()->json([
-                'token' => $token,
+                // 'token' => $token,
                 'user' => $user,
             ]);
         } else {

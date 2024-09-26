@@ -10,6 +10,10 @@ class Product extends Model
 {
     use HasFactory, UsesUuid;
 
+    public $appends = [
+        'price'
+    ];
+
     protected $fillable = [
         'id',
         'name',
@@ -20,11 +24,15 @@ class Product extends Model
         'product_line_id',
     ];
 
+    public function getPriceAttribute() {
+        return $this->currency_code . ' ' . number_format($this->unit_price, 2);
+    }
+
     public function productLine() {
         return $this->belongsTo(ProductLine::class);
     }
 
-    public function productBulletDescriptions() {
-        return $this->hasMany(ProductBulletDescription::class);
+    public function bullets() {
+        return $this->hasMany(ProductBulletDescription::class, 'product_id', 'id')->orderBy('stack_order');
     }
 }

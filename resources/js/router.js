@@ -18,12 +18,20 @@ const router = createRouter({
                     name: 'productLines',
                     component: () => import('./components/product-lines/Index.vue'),
                     meta: {displayName: 'Product lines'},
+                    children: [
+                        {
+                            path: ':id',
+                            name: 'productLine',
+                            meta: {displayName: 'Products'},
+                            component: () => import('./components/product-lines/products/Index.vue')
+                        }
+                    ]
                 },
                 {
-                    path: 'products',
-                    name: 'products',
-                    component: () => import('./components/products/Index.vue'),
-                    meta: {displayName: 'Products'},
+                    path: 'products/:productId',
+                    name: 'viewProduct',
+                    meta: {displayName:'Product details'},
+                    component: () => import('./components/product-lines/products/Preview.vue')
                 },
                 {
                     path: 'sales-representatives',

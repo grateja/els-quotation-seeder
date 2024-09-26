@@ -1,6 +1,7 @@
 import { createStore } from 'vuex'
 import Mapper from '../helper/Mapper.js';
 import auth from './auth';
+import msc from './msc.js';
 
 const store = createStore({
     state () {
@@ -69,7 +70,8 @@ const store = createStore({
         }
     },
     modules: {
-        auth
+        auth,
+        msc
     }
 })
 

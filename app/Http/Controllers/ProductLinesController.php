@@ -42,6 +42,17 @@ class ProductLinesController extends Controller
     }
 
     /**
+     * Display all the details related to this product line.
+     */
+    public function full(string $id)
+    {
+        $productLine = ProductLine::findOrFail($id);
+        return response()->json([
+            'productLine' => $productLine,
+        ]);
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)

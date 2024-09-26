@@ -15,11 +15,14 @@ return new class extends Migration
             $table->uuid('id')->primary();
 
             $table->uuid('product_id');
+            $table->integer('stack_order');
             $table->text('description');
-            $table->double('unit_price')->nullable();
-            $table->string('currency_code')->default('PHP');
-            $table->string('bullet_type')->default('text')
-                ->remarks('important,text');
+
+            $table->double('quantity')->nullable();
+            $table->string('unit')->nullable()->remarks('PCS.,LOT,UNIT,BOX,CARBOY,LITER,MEGAGALLON');
+
+            $table->string('bullet_type')->default('simple')
+                ->remarks('simple,item');
 
             $table->timestamps();
 
