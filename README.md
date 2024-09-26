@@ -1,1 +1,1 @@
-<li>Product bullet description implemented</li>
+<li>Subdealer selector implemented</li>

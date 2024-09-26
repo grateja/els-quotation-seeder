@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductBulletsController;
 use App\Http\Controllers\ProductLinesController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SalesRepresentativeController;
+use App\Http\Controllers\SubdealersController;
 
 use App\Http\Controllers\TestController;
 
@@ -99,6 +100,23 @@ Route::prefix('sales-representatives')->middleware('auth:sanctum')->controller(S
     Route::get('{id}', 'show');
 
     // /api/sales-representative/{id}
+    Route::delete('{id}', 'destroy');
+});
+
+// /api/subdealers
+Route::prefix('subdealers')->middleware('auth:sanctum')->controller(SubdealersController::class)->group(function() {
+    Route::get('/', 'index');
+
+    // /api/subdealers/create
+    Route::post('create', 'store');
+
+    // /api/subdealers/{id}/update
+    Route::post('{id}/update', 'update');
+
+    // /api/subdealers/{id}
+    Route::get('{id}', 'show');
+
+    // /api/subdealers/{id}
     Route::delete('{id}', 'destroy');
 });
 

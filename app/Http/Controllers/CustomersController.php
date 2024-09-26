@@ -27,11 +27,16 @@ class CustomersController extends Controller
      */
     public function index(Request $request)
     {
-        $result = Customer::join('sales_representatives', 'customers.sales_representative_id', '=', 'sales_representatives.id')
-            ->select('customers.*', 'sales_representatives.name as sales_representative_name')
-            ->where(function($query) use ($request) {
-                $query->where('customers.name', 'like', "%$request->keyword%");
-            })->orderBy('crn');
+        // $result = Customer::join('sales_representatives', 'customers.sales_representative_id', '=', 'sales_representatives.id')
+        //     ->join('subdealers', 'customers.subdealer_id', '=', 'subdealers.id')
+        //     ->select('customers.*', 'sales_representatives.name as sales_representative_name', 'subdealers.name as subdealer_name')
+        //     ->where(function($query) use ($request) {
+        //         $query->where('customers.name', 'like', "%$request->keyword%");
+        //     })->orderBy('crn');
+
+        $result = Customer::where(function($query) use ($request) {
+            $query->where('customers.name', 'like', "%$request->keyword%");
+        })->orderBy('crn');
 
         return response()->json($result->paginate(30));
     }
@@ -52,38 +57,40 @@ class CustomersController extends Controller
             'name' => 'required',
             'address' => 'required',
             'contact_number' => 'required',
-            'sales_representative_id' => 'required|exists:sales_representatives,id', // Ensure the sales representative exists
+            'sales_representative_id' => 'nullable|exists:sales_representatives,id', // Ensure the sales representative exists
+            'subdealer_id' => 'nullable|exists:subdealers,id', // Ensure the sales representative exists
         ];
 
         $messages = [
-            'sales_representative_id.required' => 'Sales representative is required.',
             'sales_representative_id.exists' => 'The selected sales representative is invalid.',
+            'subdealer_id.exists' => 'The selected subdealer is invalid.',
         ];
 
         // Validate the request data
         $validatedData = $request->validate($rules, $messages);
 
         // Generate a CRN
-        $crn = $this->generateCRN();
+        $request->merge(['crn' => $this->generateCRN()]);
 
-        // Create a new customer record
-        $customer = Customer::create([
-            'crn' => $crn,
-            'name' => $validatedData['name'],
-            'address' => $validatedData['address'],
-            'contact_number' => $validatedData['contact_number'],
-            'sales_representative_id' => $validatedData['sales_representative_id'],
-        ]);
+
+        $customer = Customer::create($request->only([
+            'crn',
+            'name',
+            'address',
+            'contact_number',
+            'sales_representative_id',
+            'subdealer_id',
+        ]));
 
         // Load the sales representative relationship
-        $customer->load('salesRepresentative');
+        // $customer->load('salesRepresentative');
 
         // Add sales representative name to the response
-        $response = $customer->toArray(); // Convert the customer object to an array
-        $response['sales_representative_name'] = $customer->salesRepresentative->name; // Add the sales representative name
+        // $response = $customer->toArray(); // Convert the customer object to an array
+        // $response['sales_representative_name'] = $customer->salesRepresentative->name; // Add the sales representative name
 
         // Return the response
-        return response()->json($response);
+        return response()->json($customer);
     }
 
     // public function store(Request $request)
@@ -138,12 +145,13 @@ class CustomersController extends Controller
             'name' => 'required',
             'address' => 'required',
             'contact_number' => 'required',
-            'sales_representative_id' => 'required|exists:sales_representatives,id', // Ensure the sales representative exists
+            'sales_representative_id' => 'nullable|exists:sales_representatives,id', // Ensure the sales representative exists
+            'subdealer_id' => 'nullable|exists:subdealers,id', // Ensure the sales representative exists
         ];
 
         $messages = [
-            'sales_representative_id.required' => 'Sales representative is required.',
             'sales_representative_id.exists' => 'The selected sales representative is invalid.',
+            'subdealer_id.exists' => 'The selected subdealer is invalid.',
         ];
 
         if($customer->name != $request->name) {
@@ -153,23 +161,23 @@ class CustomersController extends Controller
         // Validate the request data
         $validatedData = $request->validate($rules, $messages);
 
-        // Create a new customer record
-        $customer->update([
-            'name' => $validatedData['name'],
-            'address' => $validatedData['address'],
-            'contact_number' => $validatedData['contact_number'],
-            'sales_representative_id' => $validatedData['sales_representative_id'],
-        ]);
+        $customer->update($request->only([
+            'name',
+            'address',
+            'contact_number',
+            'sales_representative_id',
+            'subdealer_id',
+        ]));
 
         // Load the sales representative relationship
-        $customer->load('salesRepresentative');
+        // $customer->load('salesRepresentative');
 
         // Add sales representative name to the response
-        $response = $customer->toArray(); // Convert the customer object to an array
-        $response['sales_representative_name'] = $customer->salesRepresentative->name; // Add the sales representative name
+        // $response = $customer->toArray(); // Convert the customer object to an array
+        // $response['sales_representative_name'] = $customer->salesRepresentative->name; // Add the sales representative name
 
         // Return the response
-        return response()->json($response);
+        return response()->json($customer);
     }
 
     /**

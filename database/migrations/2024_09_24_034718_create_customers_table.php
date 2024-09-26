@@ -23,8 +23,10 @@ return new class extends Migration
             $table->string('contact_number')->nullable();
 
             $table->uuid('sales_representative_id')->nullable();
+            $table->uuid('subdealer_id')->nullable();
 
             $table->foreign('sales_representative_id')->references('id')->on('sales_representatives')->onDelete('CASCADE')->onUpdate('CASCADE');
+            $table->foreign('subdealer_id')->references('id')->on('subdealers')->onDelete('CASCADE')->onUpdate('CASCADE');
 
             $table->timestamps();
         });
