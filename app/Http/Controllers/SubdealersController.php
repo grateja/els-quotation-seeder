@@ -55,7 +55,8 @@ class SubdealersController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $subdealer = Subdealer::findOrFail($id);
+        return response()->json($subdealer);
     }
 
     /**

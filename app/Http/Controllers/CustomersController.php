@@ -27,16 +27,16 @@ class CustomersController extends Controller
      */
     public function index(Request $request)
     {
-        // $result = Customer::join('sales_representatives', 'customers.sales_representative_id', '=', 'sales_representatives.id')
-        //     ->join('subdealers', 'customers.subdealer_id', '=', 'subdealers.id')
-        //     ->select('customers.*', 'sales_representatives.name as sales_representative_name', 'subdealers.name as subdealer_name')
-        //     ->where(function($query) use ($request) {
-        //         $query->where('customers.name', 'like', "%$request->keyword%");
-        //     })->orderBy('crn');
+        $result = Customer::leftJoin('sales_representatives', 'customers.sales_representative_id', '=', 'sales_representatives.id')
+            ->leftJoin('subdealers', 'customers.subdealer_id', '=', 'subdealers.id')
+            ->select('customers.*', 'sales_representatives.name as sales_representative_name', 'subdealers.name as subdealer_name')
+            ->where(function($query) use ($request) {
+                $query->where('customers.name', 'like', "%$request->keyword%");
+            })->orderBy('crn');
 
-        $result = Customer::where(function($query) use ($request) {
-            $query->where('customers.name', 'like', "%$request->keyword%");
-        })->orderBy('crn');
+        // $result = Customer::where(function($query) use ($request) {
+        //     $query->where('customers.name', 'like', "%$request->keyword%");
+        // })->orderBy('crn');
 
         return response()->json($result->paginate(30));
     }
@@ -90,6 +90,17 @@ class CustomersController extends Controller
         // $response['sales_representative_name'] = $customer->salesRepresentative->name; // Add the sales representative name
 
         // Return the response
+
+        if($customer->sales_representative_id !== null) {
+            $customer->load('salesRepresentative');
+            $customer['sales_representative_name'] = $customer->salesRepresentative->name;
+        }
+
+        if($customer->subdealer_id !== null) {
+            $customer->load('subdealer');
+            $customer['subdealer_name'] = $customer->subdealer->name;
+        }
+
         return response()->json($customer);
     }
 
@@ -177,6 +188,17 @@ class CustomersController extends Controller
         // $response['sales_representative_name'] = $customer->salesRepresentative->name; // Add the sales representative name
 
         // Return the response
+
+        if($customer->sales_representative_id !== null) {
+            $customer->load('salesRepresentative');
+            $customer['sales_representative_name'] = $customer->salesRepresentative->name;
+        }
+
+        if($customer->subdealer_id !== null) {
+            $customer->load('subdealer');
+            $customer['subdealer_name'] = $customer->subdealer->name;
+        }
+
         return response()->json($customer);
     }
 

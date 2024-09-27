@@ -13,7 +13,7 @@
                     </v-btn>
                     <v-divider class="my-4"></v-divider>
                     <p>RBP</p>
-                    <v-btn @click="openSubdealerSelector = true" :color="subdealer != null ? 'primary': ''" :loading="rbpLoading">{{ rbpName }}
+                    <v-btn @click="openSubdealerSelector = true" :color="subdealer != null ? 'primary': ''" :loading="subdealerLoading">{{ rbpName }}
                         <v-icon right>{{ subdealer ? 'mdi-pencil' : 'mdi-magnify' }}</v-icon>
                     </v-btn>
                 </v-card-text>
@@ -60,7 +60,7 @@ export default {
             subdealer: null,
             salesRep: null,
             salesRepLoading: false,
-            rbpLoading: false,
+            subdealerLoading: false,
             openSRSelector: false,
             openSRCreator: false,
             openSubdealerSelector: false,
@@ -119,6 +119,14 @@ export default {
             }).finally(() => {
                 this.salesRepLoading = false;
             });
+        },
+        loadSubdealer(subdealerId) {
+            this.subdealerLoading = true;
+            axios.get(`/api/subdealers/${subdealerId}`).then((res, rej) => {
+                this.subdealer = res.data
+            }).finally(() => {
+                this.subdealerLoading = false;
+            });
         }
     },
     computed: {
@@ -131,9 +139,6 @@ export default {
         rbpName() {
             return this.subdealer ? this.subdealer.alias : 'Select RBP';
         },
-        loadingSalesRep() {
-            return this.$store.getters.loadingKeys;
-        }
     },
     watch: {
         customer: {
@@ -146,6 +151,10 @@ export default {
                     this.action = 'update'
                     if(newVal.salesRep == null && newVal.sales_representative_id != null) {
                         this.loadSalesRep(newVal.sales_representative_id);
+                    }
+
+                    if(newVal.subdealer == null && newVal.subdealer_id != null) {
+                        this.loadSubdealer(newVal.subdealer_id);
                     }
                 } else {
                     this.formData.name = null;
