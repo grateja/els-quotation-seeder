@@ -34,6 +34,7 @@
                 </v-icon>
               </template>
         </v-data-table>
+        <pre>{{items}}</pre>
         <v-dialog v-model="openAddEditDialog" max-width="500" persistent>
             <customer-form @close="openAddEditDialog = false" @save="updateItems" :customer="currentCustomer" />
         </v-dialog>

@@ -8,19 +8,19 @@
                     <v-text-field class="my-4" v-model="formData.address" label="Address" variant="outlined" :error-messages="errors.get('address')"/>
                     <v-text-field class="my-4" v-model="formData.contact_number" label="Contact number" variant="outlined" :error-messages="errors.get('contact_number')"/>
                     <p>Sales representative</p>
-                    <v-btn @click="openSRSelector = true" :color="salesRep != null ? 'primary': ''" :loading="salesRepLoading">{{ salesRepName }}
+                    <v-btn @click="openSRSelector = true" :color="salesRep != null ? 'primary': ''" :loading="loadingKeys.hasAny('get-sales-rep')">{{ salesRepName }}
                         <v-icon right>{{ salesRep ? 'mdi-pencil' : 'mdi-magnify' }}</v-icon>
                     </v-btn>
                     <v-divider class="my-4"></v-divider>
                     <p>RBP</p>
-                    <v-btn @click="openSubdealerSelector = true" :color="subdealer != null ? 'primary': ''" :loading="subdealerLoading">{{ rbpName }}
+                    <v-btn @click="openSubdealerSelector = true" :color="subdealer != null ? 'primary': ''" :loading="loadingKeys.hasAny('get-subdealer')">{{ rbpName }}
                         <v-icon right>{{ subdealer ? 'mdi-pencil' : 'mdi-magnify' }}</v-icon>
                     </v-btn>
                 </v-card-text>
                 <v-divider></v-divider>
                 <v-card-actions>
                     <v-btn text="Close" @click="$emit('close')"/>
-                    <v-btn type="submit" color="primary">Save</v-btn>
+                    <v-btn type="submit" color="primary" :disabled="loadingKeys.hasAny('get-subdealer', 'get-customer')" :loading="loadingKeys.hasAny('save-customer')">Save</v-btn>
                 </v-card-actions>
             </v-card>
         </form>
@@ -59,8 +59,6 @@ export default {
         return {
             subdealer: null,
             salesRep: null,
-            salesRepLoading: false,
-            subdealerLoading: false,
             openSRSelector: false,
             openSRCreator: false,
             openSubdealerSelector: false,
@@ -113,19 +111,23 @@ export default {
             this.openSubdealerCreator = true;
         },
         loadSalesRep(salesRepId) {
-            this.salesRepLoading = true;
-            axios.get(`/api/sales-representatives/${salesRepId}`).then((res, rej) => {
+            this.$store.dispatch('get', {
+                tag: 'get-sales-rep',
+                url: `/api/sales-representatives/${salesRepId}`
+            }).then((res, rej) => {
                 this.salesRep = res.data
-            }).finally(() => {
-                this.salesRepLoading = false;
+            }).catch(err => {
+                this.salesRep = null
             });
         },
         loadSubdealer(subdealerId) {
-            this.subdealerLoading = true;
-            axios.get(`/api/subdealers/${subdealerId}`).then((res, rej) => {
+            this.$store.dispatch('get', {
+                tag: 'get-subdealer',
+                url: `/api/subdealers/${subdealerId}`
+            }).then((res, rej) => {
                 this.subdealer = res.data
-            }).finally(() => {
-                this.subdealerLoading = false;
+            }).catch(err => {
+                this.subdealer = null
             });
         }
     },
@@ -139,6 +141,9 @@ export default {
         rbpName() {
             return this.subdealer ? this.subdealer.alias : 'Select RBP';
         },
+        loadingKeys() {
+            return this.$store.getters.loadingKeys
+        }
     },
     watch: {
         customer: {
@@ -149,11 +154,16 @@ export default {
                     this.formData.contact_number = newVal.contact_number;
                     this.salesRep = newVal.sales_representative
                     this.action = 'update'
-                    if(newVal.salesRep == null && newVal.sales_representative_id != null) {
+
+                    if(newVal.salesRep != null) {
+                        this.salesRep = newVal.salesRep
+                    } else if(newVal.sales_representative_id != null) {
                         this.loadSalesRep(newVal.sales_representative_id);
                     }
 
-                    if(newVal.subdealer == null && newVal.subdealer_id != null) {
+                    if(newVal.subdealer != null) {
+                        this.subdealer = newVal.subdealer
+                    } else if(newVal.subdealer_id != null) {
                         this.loadSubdealer(newVal.subdealer_id);
                     }
                 } else {
@@ -161,6 +171,7 @@ export default {
                     this.formData.address = null;
                     this.formData.contact_number = null;
                     this.salesRep = null
+                    this.subdealer = null
                     this.action = 'create'
                 }
             },

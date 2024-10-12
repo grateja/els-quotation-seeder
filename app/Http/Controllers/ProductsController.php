@@ -10,15 +10,20 @@ class ProductsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request, $productLineId)
+    public function index(Request $request, string $productLineId = null)
     {
-        $result = Product::with('bullets')->where('product_line_id', $productLineId)->where(function($query) use ($request) {
-            $query->where('name', 'like', "%$request->keyword%");
-        })->orderByDesc('created_at')
-        ->selectRaw('products.*, concat(brand, "-" , model) as alias');
+        $result = Product::with('bullets')
+            ->when($productLineId, function ($query) use ($productLineId) {
+                // If $productLineId is not null, add the condition
+                $query->where('product_line_id', $productLineId);
+            })
+            ->where(function($query) use ($request) {
+                $query->where('name', 'like', "%$request->keyword%");
+            })->orderBy('name')
+            ->selectRaw('products.*, concat(brand, "-" , model) as alias');
 
         return response()->json(
-            $result->paginate(30)
+            $result->paginate(0)
         );
     }
 

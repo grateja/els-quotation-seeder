@@ -21,9 +21,8 @@ return new class extends Migration
             $table->uuid('sales_representative_id')->nullable();
 
             $table->uuid('customer_id');
-            $table->uuid('shop_id');
 
-            $table->string('status')->remarks('closed,under-nego,lost-sales,follow-up,no-site');
+            $table->string('status')->default('draft')->remarks('draft,closed,under-nego,lost-sales,follow-up,no-site');
 
             $table->timestamps();
 
@@ -32,7 +31,6 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('CASCADE')->onUpdate('CASCADE');
             $table->foreign('subdealer_id')->references('id')->on('subdealers')->onDelete('CASCADE')->onUpdate('CASCADE');
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('CASCADE')->onUpdate('CASCADE');
-            $table->foreign('shop_id')->references('id')->on('shops')->onDelete('CASCADE')->onUpdate('CASCADE');
         });
     }
 

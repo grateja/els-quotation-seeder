@@ -1,7 +1,6 @@
 <template>
     <v-container>
         <v-card v-if="product">
-            {{ lastStackOrder }}
             <v-card-actions>
                 <v-chip><h3>{{product.brand}} - {{ product.model }}</h3></v-chip>
                 <h3>{{ product.name }}</h3>

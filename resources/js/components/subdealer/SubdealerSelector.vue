@@ -4,7 +4,7 @@
             <v-card-title>Select subdealer</v-card-title>
             <v-card-text>
                 <v-btn @click="select(null)" color="primary" class="my-4">Create new</v-btn>
-                <v-text-field variant="outlined" v-model="keyword" @input="onInput" append-inner-icon="mdi-magnify" placeholder="Type name" />
+                <v-text-field :loading="loadingKeys.hasAny('get-subdealers')" variant="outlined" v-model="keyword" @input="onInput" append-inner-icon="mdi-magnify" placeholder="Type name" />
                 <v-list>
                     <v-list-item :class="{ 'highlighted': model && subdealer.id == model.id }" v-for="(subdealer, index) in items" :key="subdealer.id" @click="select(subdealer)">
                         <v-list-item-title>
@@ -35,11 +35,19 @@ export default {
             this.debouncedLoadData();
         },
         loadData() {
-            axios.get('/api/subdealers', {
-                params: {
+            this.$store.dispatch('get', {
+                url: '/api/subdealers',
+                tag: 'get-subdealers',
+                formData: {
                     keyword: this.keyword
                 }
-            }).then((res, rej) => {
+            })
+            // axios.get('/api/subdealers', {
+            //     params: {
+            //         keyword: this.keyword
+            //     }
+            // })
+            .then((res, rej) => {
                 this.items = res.data.data;
             });
         },
@@ -49,6 +57,11 @@ export default {
         },
         close() {
             this.$emit('close');
+        }
+    },
+    computed: {
+        loadingKeys() {
+            return this.$store.state.loadingKeys;
         }
     },
     created() {

@@ -19,3 +19,7 @@ span.list-style-item {
     color: rgb(6, 100, 195);
     font-weight: 600;
 }
+
+.crossed {
+    text-decoration: line-through;
+}

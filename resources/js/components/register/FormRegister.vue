@@ -56,7 +56,7 @@ export default {
             return this.$store.getters.getErrors;
         },
         loading () {
-            return this.$store.getters.loadingKeys.includes('register');
+            return this.$store.getters.loadingKeys.hasAny('register');
         }
     }
 }

@@ -16,7 +16,6 @@ class Quotation extends Model
         'subdealer_id',
         'sales_representative_id',
         'customer_id',
-        'shop_id',
         'status',
     ];
 
@@ -40,7 +39,37 @@ class Quotation extends Model
         return $this->belongsTo(Shop::class);
     }
 
-    public function products() {
-        return $this->hasMany(Product::class);
+    public function quotationProducts() {
+        return $this->hasMany(QuotationProduct::class);
+    }
+
+
+    public static function generateQuotationNumber($prefix) {
+        // Step 1: Get current month and year
+        $currentMonth = strtoupper(date('M')[0]); // First letter of the month
+        $currentYear = date('y'); // Last 2 digits of the year (24 for 2024)
+
+        // Step 2: Build the base for the quotation number (e.g., A24-)
+        $baseQuotationNumber = $currentMonth . $currentYear . '-';
+
+        // Step 3: Retrieve the last incremental number
+        $lastQuotation = self::where('quotation_number', 'like', "$baseQuotationNumber%")
+            ->orderBy('quotation_number', 'desc')
+            ->first();
+
+        // Step 4: Extract the incremental part from the last quotation number
+        $incremental = 1;
+        if ($lastQuotation) {
+            $lastIncremental = (int) substr($lastQuotation->quotation_number, 4, 4);
+            $incremental = $lastIncremental + 1;
+        }
+
+        // Step 5: Format the incremental number as 4 digits (e.g., 0007)
+        $incrementalFormatted = str_pad($incremental, 4, '0', STR_PAD_LEFT);
+
+        // Step 6: Generate the final quotation number (e.g., A24-0007-LG)
+        $quotationNumber = $baseQuotationNumber . $incrementalFormatted . '-' . strtoupper($prefix);
+
+        return $quotationNumber;
     }
 }

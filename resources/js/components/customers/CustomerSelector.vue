@@ -1,15 +1,26 @@
 <template>
     <div>
         <v-card>
-            <v-card-title>Select sales representative</v-card-title>
+            <v-card-title>Select customer</v-card-title>
             <v-card-text>
                 <v-btn @click="select(null)" color="primary" class="my-4">Create new</v-btn>
-                <v-text-field :loading="loadingKeys.hasAny('get-sales-reps')" variant="outlined" v-model="keyword" @input="onInput" append-inner-icon="mdi-magnify" placeholder="Type sales rep. name" />
+                <v-text-field
+                    v-model="keyword"
+                    append-inner-icon="mdi-magnify"
+                    placeholder="Type customer name"
+                    variant="outlined"
+                    :loading="loadingKeys.hasAny('get-customers')"
+                    @input="onInput"
+                />
                 <v-list>
-                    <v-list-item :class="{ 'highlighted': model && salesRep.id == model.id }" v-for="(salesRep, index) in items" :key="salesRep.id" @click="select(salesRep)">
-                        <v-list-item-title>
-                            {{ salesRep.alias }}
-                        </v-list-item-title>
+                    <v-list-item
+                        v-for="(customer, index) in items"
+                        :title="customer.name"
+                        :subtitle="customer.address"
+                        :class="{ 'highlighted': model && customer.id == model.id }"
+                        :key="customer.id"
+                        @click="select(customer)"
+                    >
                     </v-list-item>
                 </v-list>
             </v-card-text>
@@ -36,13 +47,13 @@ export default {
         },
         loadData() {
             this.$store.dispatch('get', {
-                tag: 'get-sales-reps',
-                url: '/api/sales-representatives',
+                url: '/api/customers',
+                tag: 'get-customers',
                 formData: {
                     keyword: this.keyword
                 }
             })
-            // axios.get('/api/sales-representatives', {
+            // axios.get('/api/customers', {
             //     params: {
             //         keyword: this.keyword
             //     }
@@ -61,7 +72,7 @@ export default {
     },
     computed: {
         loadingKeys() {
-            return this.$store.state.loadingKeys;
+            return this.$store.getters.loadingKeys;
         }
     },
     created() {

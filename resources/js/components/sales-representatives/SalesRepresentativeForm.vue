@@ -11,7 +11,7 @@
                 <v-divider></v-divider>
                 <v-card-actions>
                     <v-btn text="Close" @click="$emit('close')"/>
-                    <v-btn type="submit" color="primary">Save</v-btn>
+                    <v-btn type="submit" color="primary" :loading="loadingKeys.hasAny('save-sales-representatives')">Save</v-btn>
                 </v-card-actions>
             </v-card>
         </form>
@@ -51,6 +51,9 @@ export default {
     computed: {
         errors() {
             return this.$store.getters.getErrors;
+        },
+        loadingKeys() {
+            return this.$store.getters.loadingKeys;
         }
     },
     watch: {

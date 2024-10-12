@@ -8,6 +8,8 @@ use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\ProductBulletsController;
 use App\Http\Controllers\ProductLinesController;
 use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\QuotationsController;
+use App\Http\Controllers\QuotationProductsController;
 use App\Http\Controllers\SalesRepresentativeController;
 use App\Http\Controllers\SubdealersController;
 
@@ -49,7 +51,7 @@ Route::prefix('product-lines')->middleware('auth:sanctum')->controller(ProductLi
 
 // /api/products
 Route::prefix('products')->middleware('auth:sanctum')->controller(ProductsController::class)->group(function() {
-    Route::get('{productLineId}', 'index');
+    Route::get('{productLineId?}', 'index');
 
     // /api/products/{productId}/details
     Route::get('{productId}/details', 'show');
@@ -124,6 +126,9 @@ Route::prefix('subdealers')->middleware('auth:sanctum')->controller(SubdealersCo
 Route::prefix('customers')->middleware('auth:sanctum')->controller(CustomersController::class)->group(function() {
     Route::get('/', 'index');
 
+    // /api/customers/{customerId}
+    Route::get('{customerId}', 'show');
+
     // /api/customers/generate-crn
     Route::get('generate-crn', 'generateCRN');
 
@@ -136,3 +141,36 @@ Route::prefix('customers')->middleware('auth:sanctum')->controller(CustomersCont
     // /api/customers/{customerId}
     Route::delete('{customerId}', 'destroy');
 });
+
+// /api/quotations
+Route::prefix('quotations')->middleware('auth:sanctum')->controller(QuotationsController::class)->group(function() {
+    Route::get('/', 'index');
+
+    // /api/quotations/create
+    Route::post('create', 'store');
+
+    // /api/quotations/{quotationId}/update
+    Route::post('{quotationId}/update', 'update');
+
+    // /api/quotations/{quotationId}/edit
+    Route::get('{quotationId}/edit', 'edit');
+
+    // /api/quotations/{quotationId}
+    Route::delete('{quotationId}', 'destroy');
+});
+
+// /api/quotation-products
+Route::prefix('quotation-products')->middleware('auth:sanctum')->controller(QuotationProductsController::class)->group(function() {
+    // /api/quotation-products/{quotationId}/create
+    Route::post('{quotationId}/create', 'store');
+
+    // /api/quotation-products/{quotationId}/update
+    Route::post('{quotationId}/update', 'update');
+
+    // /api/quotation-products/{quotationId}/edit
+    Route::get('{quotationId}/edit', 'edit');
+
+    // /api/quotation-products/{quotationId}
+    Route::delete('{quotationId}', 'destroy');
+});
+

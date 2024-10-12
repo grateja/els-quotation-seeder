@@ -8,7 +8,7 @@
                 <v-card-text>
                     <v-text-field type="email"  name="email" v-model="formData.email" variant="outlined" label="Email" :error-messages="errors.get('email')" class="ma-2" />
                     <v-text-field type="password"  name="password" v-model="formData.password" variant="outlined" label="Password" :error-messages="errors.get('password')" class="ma-2" />
-                    <v-btn :loading="loadingKeys.includes('logging-in')" round type="submit" color="primary" class="ma-2">Log in</v-btn>
+                    <v-btn :loading="loadingKeys.hasAny('logging-in')" round type="submit" color="primary" class="ma-2">Log in</v-btn>
                 </v-card-text>
             </v-card>
         </form>
@@ -27,9 +27,9 @@
 		},
         methods: {
             login() {
-                this.$store.dispatch('auth/login', this.formData).then((res, rej) => {
+                this.$store.dispatch('auth/login', this.formData).then((res) => {
                     this.$router.push({name:'home'})
-                })
+                });
                 // this.$store.dispatch('post', {
                 //     tag: 'login',
                 //     url: 'auth/login',

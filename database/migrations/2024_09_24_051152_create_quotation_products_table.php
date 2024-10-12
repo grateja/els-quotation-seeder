@@ -17,6 +17,8 @@ return new class extends Migration
             $table->uuid('quotation_id');
             $table->uuid('product_id');
 
+            $table->string('name');
+
             $table->double('unit_price');
             $table->string('currency_code');
             $table->integer('quantity');

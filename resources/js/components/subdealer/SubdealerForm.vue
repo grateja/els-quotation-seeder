@@ -6,12 +6,12 @@
                 <v-card-text>
                     <v-text-field class="my-4" v-model="formData.abbr" label="Name" variant="outlined" :error-messages="errors.get('abbr')"/>
                     <v-text-field class="my-4" v-model="formData.name" label="Initials" variant="outlined" :error-messages="errors.get('name')"/>
-                    <v-text-field class="my-4" v-model="formData.area" label="Department" variant="outlined" :error-messages="errors.get('area')"/>
+                    <v-text-field class="my-4" v-model="formData.area" label="Area" variant="outlined" :error-messages="errors.get('area')"/>
                 </v-card-text>
                 <v-divider></v-divider>
                 <v-card-actions>
                     <v-btn text="Close" @click="$emit('close')"/>
-                    <v-btn type="submit" color="primary">Save</v-btn>
+                    <v-btn type="submit" color="primary" :loading="loadingKeys.hasAny('save-subdealer')">Save</v-btn>
                 </v-card-actions>
             </v-card>
         </form>
@@ -51,6 +51,9 @@ export default {
     computed: {
         errors() {
             return this.$store.getters.getErrors;
+        },
+        loadingKeys() {
+            return this.$store.getters.loadingKeys;
         }
     },
     watch: {

@@ -21,8 +21,8 @@
             <v-spacer/>
             <v-btn @click="logout">logout</v-btn>
         </v-app-bar>
-
         <v-main>
+            {{loadingKeys}}
             <router-view/>
         </v-main>
     </v-app>
@@ -53,6 +53,9 @@
     computed: {
         currentUser() {
             return this.$store.getters.getCurrentUser;
+        },
+        loadingKeys() {
+            return this.$store.getters.loadingKeys;
         }
     }
   };

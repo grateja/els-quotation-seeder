@@ -50,6 +50,14 @@ const router = createRouter({
                     name: 'quotations',
                     component: () => import('./components/quotations/Index.vue'),
                     meta: {displayName: 'Quotations'},
+                    children: [
+                        {
+                            path: ':id/edit',
+                            name: 'editQuotation',
+                            component: () => import('./components/quotations/EditItems.vue'),
+                            meta: {displayName: 'Edit quotation'},
+                        }
+                    ]
                 },
             ]
     	},

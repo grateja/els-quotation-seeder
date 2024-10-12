@@ -132,9 +132,10 @@ class CustomersController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $customerId)
     {
-        //
+        $customer = Customer::findOrFail($customerId);
+        return response()->json($customer);
     }
 
     /**

@@ -6,8 +6,9 @@ export default {
         login(context, data) {
             context.commit('setLoading', 'logging-in', {root: true});
             context.commit('clearErrors', null, {root: true});
-            axios.post('/api/auth/login', data).then((res, rej) => {
+            return axios.post('/api/auth/login', data).then((res, rej) => {
                 context.commit('setUser', res.data.user, {root: true});
+                console.log("res")
                 // localStorage.setItem('sanctumToken', res.data.token.plainTextToken);
                 // localStorage.setItem('tokenName', res.data.token.accessToken.name);
                 return res;
@@ -21,7 +22,7 @@ export default {
         logout(context, data) {
             context.commit('setLoading', 'logging-out', {root: true});
             context.commit('clearErrors', null, {root: true});
-            axios.post('/api/auth/logout', {
+            return axios.post('/api/auth/logout', {
                 tokenName: localStorage.tokenName,
                 token: localStorage.sanctumToken
             }).then((res, rej) => {

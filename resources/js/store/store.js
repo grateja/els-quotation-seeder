@@ -1,5 +1,6 @@
 import { createStore } from 'vuex'
 import Mapper from '../helper/Mapper.js';
+import LoadingKeys from '../helper/LoadingKeys.js';
 import auth from './auth';
 import msc from './msc.js';
 
@@ -7,18 +8,19 @@ const store = createStore({
     state () {
         return {
             errorKeys: Mapper,
-            loadingKeys: [],
+            loadingKeys: new LoadingKeys(),
             currentUser: null
         }
     },
     mutations: {
         setLoading(state, tag) {
-            if(!state.loadingKeys.includes(tag)) {
-                state.loadingKeys.push(tag)
-            }
+            state.loadingKeys.add(tag);
+            // if(!state.loadingKeys.includes(tag)) {
+            //     state.loadingKeys.push(tag)
+            // }
         },
         clearLoading(state, tag) {
-            state.loadingKeys = state.loadingKeys.filter (i => i != tag)
+            state.loadingKeys.remove(tag);
         },
         setErrors(state, errors) {
             state.errorKeys.errors = errors;
@@ -34,10 +36,12 @@ const store = createStore({
         post(context, data) {
             context.commit('clearErrors');
             context.commit('setLoading', data.tag)
-            return axios.post(data.url, data.formData).then((res, rej) => {
+            return axios.post(data.url, data.formData).then((res) => {
+                console.log("res", res);
                 return res;
             }).catch(err => {
                 context.commit('setErrors', err.response.data.errors);
+                console.log("fuck")
                 return Promise.reject(err);
             }).finally(() => {
                 context.commit('clearLoading', data.tag)
