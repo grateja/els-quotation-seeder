@@ -1,5 +1,17 @@
+@font-face {
+    font-family: 'Cambria';
+    src: url('../fonts/cambria.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
 body {
 	background: #e5e5e5;
+}
+
+.cambria {
+    font-family: 'Cambria', sans-serif;
 }
 
 .card-rounded {

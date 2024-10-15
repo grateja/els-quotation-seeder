@@ -4,76 +4,67 @@
             <v-card>
                 <v-card-title>{{action}} RBP</v-card-title>
                 <v-card-text>
-                    <v-text-field class="my-4" v-model="formData.abbr" label="Name" variant="outlined" :error-messages="errors.get('abbr')"/>
-                    <v-text-field class="my-4" v-model="formData.name" label="Initials" variant="outlined" :error-messages="errors.get('name')"/>
-                    <v-text-field class="my-4" v-model="formData.area" label="Area" variant="outlined" :error-messages="errors.get('area')"/>
+                    <v-text-field class="my-4" v-model="formData.abbr" label="Name" variant="outlined" :error-messages="errors.get('save-subdealer.abbr')"/>
+                    <v-text-field class="my-4" v-model="formData.name" label="Initials" variant="outlined" :error-messages="errors.get('save-subdealer.name')"/>
+                    <v-text-field class="my-4" v-model="formData.area" label="Area" variant="outlined" :error-messages="errors.get('save-subdealer.area')"/>
                 </v-card-text>
                 <v-divider></v-divider>
                 <v-card-actions>
                     <v-btn text="Close" @click="$emit('close')"/>
-                    <v-btn type="submit" color="primary" :loading="loadingKeys.hasAny('save-subdealer')">Save</v-btn>
+                    <v-btn type="submit" color="primary" :loading="saving">Save</v-btn>
                 </v-card-actions>
             </v-card>
         </form>
     </div>
 </template>
 
-<script>
-export default {
-    props: ['subdealer'],
-    data() {
-        return {
-            action: 'create',
-            formData: {
-                abbr: null,
-                name: null,
-                area: null,
-            }
-        }
-    },
-    methods: {
-        submit() {
-            let url = this.subdealer ? `/api/subdealers/${this.subdealer.id}/${this.action}` : `/api/subdealers/${this.action}`
+<script setup>
+import { ref, watch, defineProps, defineEmits } from 'vue'
+import { useRequestStore } from '@/store/requestStore.js'
 
-            this.$store.dispatch('post', {
-                tag: 'save-subdealer',
-                url,
-                formData: this.formData
-            }).then((res, rej) => {
-                this.$emit('close');
-                this.$emit('save', {
-                    action: this.action,
-                    subdealer: res.data
-                });
-            });
-        }
-    },
-    computed: {
-        errors() {
-            return this.$store.getters.getErrors;
-        },
-        loadingKeys() {
-            return this.$store.getters.loadingKeys;
-        }
-    },
-    watch: {
-        subdealer: {
-            handler(newVal, oldVal) {
-                if(newVal) {
-                    this.formData.abbr = newVal.abbr;
-                    this.formData.name = newVal.name;
-                    this.formData.area = newVal.area;
-                    this.action = 'update'
-                } else {
-                    this.formData.abbr = null;
-                    this.formData.name = null;
-                    this.formData.area = null;
-                    this.action = 'create'
-                }
-            },
-            deep: true,
-            immediate: true
-        }
-    }
+const props = defineProps(['subdealer'])
+const emit = defineEmits(['close', 'save'])
+let action = 'create'
+const saving = ref(false)
+const formData = ref({
+    abbr: '',
+    name: '',
+    area: ''
+})
+
+const errors = useRequestStore()
+errors.clear()
+
+const submit = async () => {
+    let url = (props.subdealer ? `/api/subdealers/${props.subdealer.id}/${action}` : `/api/subdealers/${action}`) + '?tag=save-subdealer'
+    saving.value = true
+
+    axios.post(url, formData.value).then(res => {
+        close()
+        emit('save', {
+            action,
+            subdealer: res.data
+        })
+    }).finally(() => {
+        saving.value = false
+    })
 }
+
+const close = () => {
+    emit('close')
+}
+
+watch(() => props.subdealer, (newVal) => {
+    if(newVal) {
+        formData.value.abbr = newVal.abbr;
+        formData.value.name = newVal.name;
+        formData.value.area = newVal.area;
+        action = 'update'
+    } else {
+        formData.value.abbr = null;
+        formData.value.name = null;
+        formData.value.area = null;
+        action = 'create'
+    }
+}, {immediate : true})
 </script>

@@ -6,7 +6,7 @@
                 <v-divider></v-divider>
                 <v-card-text>
                     <p>Customer</p>
-                    <p class="font-weight-bold text-red" v-if="errors.has('customer_id')">{{errors.get('customer_id')}}</p>
+                    <p class="font-weight-bold text-red" v-if="errors.has('save-quotation.customer_id')">{{errors.get('save-quotation.customer_id')}}</p>
                     <v-btn @click="customerSelectorOpen = true" :color="customer != null ? 'primary': ''" :loading="customerLoading">{{ customerName }}
                         <v-icon right>{{ customer ? 'mdi-pencil' : 'mdi-magnify' }}</v-icon>
                     </v-btn>
@@ -17,7 +17,7 @@
                     <v-divider class="my-4"></v-divider>
 
                     <p>Sales representative</p>
-                    <p class="font-weight-bold text-red" v-if="errors.has('sales_representative_id')">{{errors.get('sales_representative_id')}}</p>
+                    <p class="font-weight-bold text-red" v-if="errors.has('save-quotation.sales_representative_id')">{{errors.get('save-quotation.sales_representative_id')}}</p>
                     <v-btn @click="salesRepSelectorOpen = true" :color="salesRep != null ? 'primary': ''" :loading="salesRepLoading">{{ salesRepName }}
                         <v-icon right>{{ salesRep ? 'mdi-pencil' : 'mdi-magnify' }}</v-icon>
                     </v-btn>
@@ -28,8 +28,8 @@
                     <v-divider class="my-4"></v-divider>
 
                     <p>RBP</p>
-                    <p class="font-weight-bold text-red" v-if="errors.has('subdealer_id')">{{errors.get('subdealer_id')}}</p>
-                    <v-btn @click="subdealerSelectorOpen = true" :color="subdealer != null ? 'primary': ''" :loading="subdealerLoading">{{ rbpName }}
+                    <p class="font-weight-bold text-red" v-if="errors.has('save-quotation.subdealer_id')">{{errors.get('save-quotation.subdealer_id')}}</p>
+                    <v-btn @click="subdealerSelectorOpen = true" :color="subdealer != null ? 'primary': ''" :loading="subdealerLoading">{{ subdealerName }}
                         <v-icon right>{{ subdealer ? 'mdi-pencil' : 'mdi-magnify' }}</v-icon>
                     </v-btn>
                     <v-btn icon size="small" @click="subdealer = null" v-if="subdealer">
@@ -39,7 +39,7 @@
                 <v-divider></v-divider>
                 <v-card-actions>
                     <v-btn text="Close" @click="$emit('close')"/>
-                    <v-btn type="submit" color="primary" :loading="loadingKeys.hasAny('save-quotation')">Save</v-btn>
+                    <v-btn type="submit" color="primary" :loading="saving">Save</v-btn>
                 </v-card-actions>
             </v-card>
         </form>
@@ -52,14 +52,14 @@
         </v-dialog>
 
         <v-dialog v-model="salesRepSelectorOpen" max-width="600" persistent>
-            <SalesRepSelector @close="salesRepSelectorOpen = false" @select="openSRCreatorDialog" @openAddEdit="salesRepCreatorOpen = true" :model="salesRep" />
+            <SalesRepSelector @close="salesRepSelectorOpen = false" @select="openSRCreator" @openAddEdit="salesRepCreatorOpen = true" :model="salesRep" />
         </v-dialog>
         <v-dialog v-model="salesRepCreatorOpen" max-width="600" persistent>
             <SalesRepresentativeForm @close="salesRepCreatorOpen = false" :salesRepresentative="salesRep" @save="(data) => selectSalesRep(data.salesRepresentative)" />
         </v-dialog>
 
         <v-dialog v-model="subdealerSelectorOpen" max-width="600" persistent>
-            <SubdealerSelector @close="subdealerSelectorOpen = false" @select="openSubdealerCreatorDialog" @openAddEdit="subdealerCreatorOpen = true" :model="subdealer" />
+            <SubdealerSelector @close="subdealerSelectorOpen = false" @select="openSubdealerCreator" @openAddEdit="subdealerCreatorOpen = true" :model="subdealer" />
         </v-dialog>
         <v-dialog v-model="subdealerCreatorOpen" max-width="600" persistent>
             <SubdealerForm @close="subdealerCreatorOpen = false" :subdealer="subdealer" @save="(data) => selectSubdealer(data.subdealer)" />
@@ -67,7 +67,7 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import CustomerSelector from '../customers/CustomerSelector.vue';
 import CustomerForm from '../customers/CustomerForm.vue';
 import SalesRepSelector from '../sales-representatives/SalesRepSelector.vue';
@@ -75,165 +75,311 @@ import SalesRepresentativeForm from '../sales-representatives/SalesRepresentativ
 import SubdealerSelector from '../subdealer/SubdealerSelector.vue';
 import SubdealerForm from '../subdealer/SubdealerForm.vue';
 
-export default {
-    components: {
-        CustomerSelector,
-        CustomerForm,
-        SalesRepSelector,
-        SalesRepresentativeForm,
-        SubdealerForm,
-        SubdealerSelector
-    },
-    props: ['quotation'],
-    data() {
-        return {
-            subdealer: null,
-            subdealerLoading: false,
-            subdealerSelectorOpen: false,
-            subdealerCreatorOpen: false,
-            salesRep: null,
-            salesRepLoading: false,
-            salesRepSelectorOpen: false,
-            salesRepCreatorOpen: false,
-            customer: null,
-            customerLoading: null,
-            customerSelectorOpen: false,
-            customerCreatorOpen: false,
-            action: 'create',
-            formData: {
-                subdealer_id: null,
-                sales_representative_id: null,
-                customer_id: null,
-            }
-        }
-    },
-    methods: {
-        submit() {
-            let url = this.quotation ? `/api/quotations/${this.quotation.id}/${this.action}` : `/api/quotations/${this.action}`
+import { ref, computed, watch, defineProps, defineEmits } from 'vue'
+import { useRequestStore } from '@/store/requestStore.js'
 
-            this.formData.sales_representative_id = this.salesRep ? this.salesRep.id : null
-            this.formData.customer_id = this.customer ? this.customer.id : null
-            this.formData.subdealer_id = this.subdealer ? this.subdealer.id : null
+const errors = useRequestStore()
+errors.clear()
 
-            this.$store.dispatch('post', {
-                tag: 'save-quotation',
-                url,
-                formData: this.formData
-            }).then((res, rej) => {
-                this.$emit('close');
-                this.$emit('save', {
-                    action: this.action,
-                    quotation: res.data
-                });
-            });
-        },
-        selectSalesRep(salesRep) {
-            this.salesRep = salesRep;
-        },
-        openSRCreatorDialog(salesRep) {
-            this.salesRep = salesRep;
-            this.salesRepCreatorOpen = true;
-        },
-        selectSubdealer(subdealer) {
-            this.subdealer = subdealer;
-        },
-        openSubdealerCreatorDialog(subdealer) {
-            this.subdealer = subdealer;
-            this.subdealerCreatorOpen = true;
-        },
-        openCustomerCreator(customer) {
-            this.customer = customer;
-            this.customerCreatorOpen = true
-        },
-        selectCustomer(customer) {
-            this.customer = customer
-        },
-        loadSalesRep(salesRepId) {
-            this.salesRepLoading = true;
-            axios.get(`/api/sales-representatives/${salesRepId}`).then((res, rej) => {
-                this.salesRep = res.data
-            }).catch(err => {
-                this.salesRep = null
-            }).finally(() => {
-                this.salesRepLoading = false;
-            });
-        },
-        loadSubdealer(subdealerId) {
-            this.subdealerLoading = true;
-            axios.get(`/api/subdealers/${subdealerId}`).then((res, rej) => {
-                this.subdealer = res.data
-            }).catch(err => {
-                this.subdealer = null
-            }).finally(() => {
-                this.subdealerLoading = false;
-            });
-        },
-        loadCustomer(customerId) {
-            this.customerLoading = true;
-            axios.get(`/api/customers/${customerId}`).then((res, rej) => {
-                this.customer = res.data
-            }).catch(err => {
-                this.customer = null
-            }).finally(() => {
-                this.customerLoading = false;
-            });
-        }
-    },
-    computed: {
-        errors() {
-            return this.$store.getters.getErrors;
-        },
-        salesRepName() {
-            return this.salesRep ? this.salesRep.alias : 'Select sales rep.';
-        },
-        rbpName() {
-            return this.subdealer ? this.subdealer.alias : 'Select RBP';
-        },
-        customerName() {
-            return this.customer ? this.customer.name : 'Select customer'
-        },
-        loadingKeys() {
-            return this.$store.getters.loadingKeys;
-        }
-    },
-    watch: {
-        quotation: {
-            handler(newVal, oldVal) {
-                if(newVal) {
-                    this.formData.customer_id = newVal.customer_id;
-                    this.formData.subdealer_id = newVal.subdealer_id;
-                    this.formData.sales_representative_id = newVal.sales_representative_id;
-                    this.action = 'update'
+const props = defineProps(['quotation'])
+const emit = defineEmits(['save', 'close'])
 
-                    if(newVal.salesRep != null) {
-                        this.salesRep = newVal.salesRep
-                    } else if(newVal.sales_representative_id != null) {
-                        this.loadSalesRep(newVal.sales_representative_id);
-                    }
-                    if(newVal.subdealer != null) {
-                        this.subdealer = newVal.subdealer
-                    } else if(newVal.subdealer_id != null) {
-                        this.loadSubdealer(newVal.subdealer_id);
-                    }
+const subdealer = ref(null)
+const subdealerLoading = ref(false)
+const subdealerCreatorOpen = ref(false)
+const subdealerSelectorOpen = ref(false)
 
-                    if(newVal.customer != null) {
-                        this.customer = newVal.customer
-                    } else if(newVal.customer_id != null) {
-                        this.loadCustomer(newVal.customer_id);
-                    }
-                } else {
-                    this.formData.customer_id = null;
-                    this.formData.subdealer_id = null;
-                    this.formData.sales_representative_id = null;
-                    this.customer = null;
-                    this.subdealer = null;
-                    this.salesRep = null;
-                    this.action = 'create'
-                }
-            },
-            deep: true,
-            immediate: true
-        }
-    }
+const salesRep = ref(null)
+const salesRepLoading = ref(false)
+const salesRepCreatorOpen = ref(false)
+const salesRepSelectorOpen = ref(false)
+
+const customer = ref(null)
+const customerLoading = ref(false)
+const customerCreatorOpen = ref(false)
+const customerSelectorOpen = ref(false)
+
+let action = 'create'
+const saving = ref(false)
+
+const formData = ref({
+    subdealer_id: null,
+    sales_representative_id: null,
+    customer_id: null,
+})
+
+const submit = async () => {
+    let url = props.quotation ? `/api/quotations/${props.quotation.id}/${action}` : `/api/quotations/${action}`
+
+    formData.value.sales_representative_id = salesRep.value ? salesRep.value.id : null
+    formData.value.customer_id = customer.value ? customer.value.id : null
+    formData.value.subdealer_id = subdealer.value ? subdealer.value.id : null
+
+    saving.value = true
+    axios.post(url + '?tag=save-quotation', formData.value).then(res => {
+        emit('save', {
+            action,
+            quotation: res.data
+        })
+        close()
+    }).finally(() => {
+        saving.value = false
+    })
 }
+
+const close = () => {
+    emit('close')
+}
+
+const selectSalesRep = (item) => salesRep.value = item
+const selectCustomer = (item) => customer.value = item
+const selectSubdealer = (item) => subdealer.value = item
+
+const openSRCreator = (item) => {
+    selectSalesRep(item)
+    salesRepCreatorOpen.value = true
+}
+
+const openCustomerCreator = (item) => {
+    selectCustomer(item)
+    customerCreatorOpen.value = true
+}
+
+const openSubdealerCreator = (item) => {
+    selectSubdealer(item)
+    subdealerCreatorOpen.value = true
+}
+
+const loadSalesRep = (salesRepId) => {
+    salesRepLoading.value = true;
+    axios.get(`/api/sales-representatives/${salesRepId}`).then((res, rej) => {
+        salesRep.value = res.data
+    }).catch(err => {
+        salesRep.value = null
+    }).finally(() => {
+        salesRepLoading.value = false;
+    });
+}
+
+const loadCustomer = (customerId) => {
+    customerLoading.value = true;
+    axios.get(`/api/customers/${customerId}`).then((res, rej) => {
+        customer.value = res.data
+    }).catch(err => {
+        customer.value = null
+    }).finally(() => {
+        customerLoading.value = false;
+    });
+}
+
+const loadSubdealer = (subdealerId) => {
+    subdealerLoading.value = true;
+    axios.get(`/api/subdealers/${subdealerId}`).then((res, rej) => {
+        subdealer.value = res.data
+    }).catch(err => {
+        subdealer.value = null
+    }).finally(() => {
+        subdealerLoading.value = false;
+    });
+}
+
+const customerName = computed(() => customer.value ? customer.value.name : 'Select customer')
+const salesRepName = computed(() => salesRep.value ? salesRep.value.alias : 'Select SalesRep.')
+const subdealerName = computed(() => subdealer.value ? subdealer.value.alias : 'Select subdealer')
+
+watch(() => props.quotation, (newVal) => {
+    if(newVal) {
+        formData.value.customer_id = newVal.customer_id;
+        formData.value.subdealer_id = newVal.subdealer_id;
+        formData.value.sales_representative_id = newVal.sales_representative_id;
+        action = 'update'
+
+        if(newVal.salesRep != null) {
+            salesRep.value = newVal.salesRep
+        } else if(newVal.sales_representative_id != null) {
+            loadSalesRep(newVal.sales_representative_id);
+        }
+        if(newVal.subdealer != null) {
+            subdealer.value = newVal.subdealer
+        } else if(newVal.subdealer_id != null) {
+            loadSubdealer(newVal.subdealer_id);
+        }
+
+        if(newVal.customer != null) {
+            customer.value = newVal.customer
+        } else if(newVal.customer_id != null) {
+            loadCustomer(newVal.customer_id);
+        }
+    } else {
+        formData.value.customer_id = null;
+        formData.value.subdealer_id = null;
+        formData.value.sales_representative_id = null;
+        customer.value = null;
+        subdealer.value = null;
+        salesRep.value = null;
+        action = 'create'
+    }
+}, {immediate: true})
+
+// export default {
+//     components: {
+//         CustomerSelector,
+//         CustomerForm,
+//         SalesRepSelector,
+//         SalesRepresentativeForm,
+//         SubdealerForm,
+//         SubdealerSelector
+//     },
+//     props: ['quotation'],
+//     data() {
+//         return {
+//             subdealer: null,
+//             subdealerLoading: false,
+//             subdealerSelectorOpen: false,
+//             subdealerCreatorOpen: false,
+//             salesRep: null,
+//             salesRepLoading: false,
+//             salesRepSelectorOpen: false,
+//             salesRepCreatorOpen: false,
+//             customer: null,
+//             customerLoading: null,
+//             customerSelectorOpen: false,
+//             customerCreatorOpen: false,
+//             action: 'create',
+//             formData: {
+//                 subdealer_id: null,
+//                 sales_representative_id: null,
+//                 customer_id: null,
+//             }
+//         }
+//     },
+//     methods: {
+//         submit() {
+//             let url = this.quotation ? `/api/quotations/${this.quotation.id}/${this.action}` : `/api/quotations/${this.action}`
+
+//             this.formData.sales_representative_id = this.salesRep ? this.salesRep.id : null
+//             this.formData.customer_id = this.customer ? this.customer.id : null
+//             this.formData.subdealer_id = this.subdealer ? this.subdealer.id : null
+
+//             this.$store.dispatch('post', {
+//                 tag: 'save-quotation',
+//                 url,
+//                 formData: this.formData
+//             }).then((res, rej) => {
+//                 this.$emit('close');
+//                 this.$emit('save', {
+//                     action: this.action,
+//                     quotation: res.data
+//                 });
+//             });
+//         },
+//         selectSalesRep(salesRep) {
+//             this.salesRep = salesRep;
+//         },
+//         openSRCreatorDialog(salesRep) {
+//             this.salesRep = salesRep;
+//             this.salesRepCreatorOpen = true;
+//         },
+//         selectSubdealer(subdealer) {
+//             this.subdealer = subdealer;
+//         },
+//         openSubdealerCreatorDialog(subdealer) {
+//             this.subdealer = subdealer;
+//             this.subdealerCreatorOpen = true;
+//         },
+//         openCustomerCreator(customer) {
+//             this.customer = customer;
+//             this.customerCreatorOpen = true
+//         },
+//         selectCustomer(customer) {
+//             this.customer = customer
+//         },
+//         loadSalesRep(salesRepId) {
+//             this.salesRepLoading = true;
+//             axios.get(`/api/sales-representatives/${salesRepId}`).then((res, rej) => {
+//                 this.salesRep = res.data
+//             }).catch(err => {
+//                 this.salesRep = null
+//             }).finally(() => {
+//                 this.salesRepLoading = false;
+//             });
+//         },
+//         loadSubdealer(subdealerId) {
+//             this.subdealerLoading = true;
+//             axios.get(`/api/subdealers/${subdealerId}`).then((res, rej) => {
+//                 this.subdealer = res.data
+//             }).catch(err => {
+//                 this.subdealer = null
+//             }).finally(() => {
+//                 this.subdealerLoading = false;
+//             });
+//         },
+//         loadCustomer(customerId) {
+//             this.customerLoading = true;
+//             axios.get(`/api/customers/${customerId}`).then((res, rej) => {
+//                 this.customer = res.data
+//             }).catch(err => {
+//                 this.customer = null
+//             }).finally(() => {
+//                 this.customerLoading = false;
+//             });
+//         }
+//     },
+//     computed: {
+//         errors() {
+//             return this.$store.getters.getErrors;
+//         },
+//         salesRepName() {
+//             return this.salesRep ? this.salesRep.alias : 'Select sales rep.';
+//         },
+//         rbpName() {
+//             return this.subdealer ? this.subdealer.alias : 'Select RBP';
+//         },
+//         customerName() {
+//             return this.customer ? this.customer.name : 'Select customer'
+//         },
+//         loadingKeys() {
+//             return this.$store.getters.loadingKeys;
+//         }
+//     },
+//     watch: {
+//         quotation: {
+//             handler(newVal, oldVal) {
+//                 if(newVal) {
+//                     this.formData.customer_id = newVal.customer_id;
+//                     this.formData.subdealer_id = newVal.subdealer_id;
+//                     this.formData.sales_representative_id = newVal.sales_representative_id;
+//                     this.action = 'update'
+
+//                     if(newVal.salesRep != null) {
+//                         this.salesRep = newVal.salesRep
+//                     } else if(newVal.sales_representative_id != null) {
+//                         this.loadSalesRep(newVal.sales_representative_id);
+//                     }
+//                     if(newVal.subdealer != null) {
+//                         this.subdealer = newVal.subdealer
+//                     } else if(newVal.subdealer_id != null) {
+//                         this.loadSubdealer(newVal.subdealer_id);
+//                     }
+
+//                     if(newVal.customer != null) {
+//                         this.customer = newVal.customer
+//                     } else if(newVal.customer_id != null) {
+//                         this.loadCustomer(newVal.customer_id);
+//                     }
+//                 } else {
+//                     this.formData.customer_id = null;
+//                     this.formData.subdealer_id = null;
+//                     this.formData.sales_representative_id = null;
+//                     this.customer = null;
+//                     this.subdealer = null;
+//                     this.salesRep = null;
+//                     this.action = 'create'
+//                 }
+//             },
+//             deep: true,
+//             immediate: true
+//         }
+//     }
+// }
 </script>

@@ -1,8 +1,6 @@
 <template>
     <v-container>
-        <template v-if="$route.params.id">
-            <router-view></router-view>
-        </template>
+        <router-view v-if="$route.params.quotationId"></router-view>
         <template v-else>
             <v-text-field
                 append-icon="mdi-magnify"
@@ -50,104 +48,101 @@
             </v-data-table>
         </template>
         <v-dialog v-model="openAddEditDialog" max-width="500" persistent>
-            <quotation-form @close="openAddEditDialog = false" @save="updateItems" :quotation="currentQuotation" />
+            <quotation-form @close="openAddEditDialog = false" @save="updateItems" :quotation="quotation" />
         </v-dialog>
     </v-container>
 </template>
-<script>
+<script setup>
 import QuotationForm from './QuotationForm.vue';
-export default {
-    components: {
-        QuotationForm
-    },
-    data: () => {
-        return {
-            currentQuotation: null,
-            openAddEditDialog: false,
-            page: 1,
-            keyword: '',
-            loading: false,
-            items: [],
-            header: [
-                {
-                    sortable: false,
-                    title: 'Quotation#',
-                    key: 'quotation_number'
-                },
-                {
-                    sortable: false,
-                    title: 'Customer name',
-                    key: 'customer_name'
-                },
-                {
-                    sortable: false,
-                    title: 'RBP/SalesRep.',
-                    key: 'fao'
-                },
-                {
-                    sortable: false,
-                    title: 'Status',
-                    key: 'status'
-                },
-                {
-                    sortable: false,
-                    title: "Actions",
-                    key: 'actions'
-                }
-            ]
-        }
-    },
-    methods: {
-        onInput() {
-            this.debouncedLoadData()
-        },
-        loadData() {
-            this.loading = true;
-            axios.get('/api/quotations', {
-                params: {
-                    keyword: this.keyword,
-                    page: this.page
-                }
-            }).then((res, rej) => {
-                this.items = res.data.data;
-            }).finally(() => {
-                this.loading = false;
-            })
-        },
-        openAddEdit(quotation) {
-            this.currentQuotation = quotation;
-            this.openAddEditDialog = true;
-        },
-        openDelete(quotation) {
-            if(confirm("Delete this quotation")) {
-                axios.delete(`/api/customers/${quotation.id}`).then((res, rej) => {
-                    this.items = this.items.filter(item => item.id !== quotation.id);
-                });
-            }
-        },
-        openInNew(quotation) {
-            this.$router.push({
-                name: 'editQuotation',
-                params: {
-                    id: quotation.id
-                }
-            });
-        },
-        updateItems(data) {
-            if(data.action == 'create') {
-                this.openInNew(data.quotation);
-            } else {
-                let index = this.items.findIndex(item => item.id === data.quotation.id);
 
-                if (index !== -1) {
-                    this.items[index] = { ...this.items[index], ...data.quotation };
-                }
-            }
-        }
+import { ref } from 'vue'
+import { debounce } from 'lodash'
+import { useRouter } from 'vue-router'
+
+const route = useRouter()
+
+let page = 1
+const quotation = ref(null)
+const keyword = ref('')
+const loading = ref(false)
+const items = ref([])
+const openAddEditDialog = ref(false)
+const header = [
+    {
+        sortable: false,
+        title: 'Quotation#',
+        key: 'quotation_number'
     },
-    created() {
-        this.debouncedLoadData = this.$debounce(this.loadData, 500);
-        this.loadData();
+    {
+        sortable: false,
+        title: 'Customer name',
+        key: 'customer_name'
+    },
+    {
+        sortable: false,
+        title: 'RBP/SalesRep.',
+        key: 'fao'
+    },
+    {
+        sortable: false,
+        title: 'Status',
+        key: 'status'
+    },
+    {
+        sortable: false,
+        title: "Actions",
+        key: 'actions'
+    }
+]
+
+const onInput = debounce(async () => {
+    loading.value = true;
+    axios.get('/api/quotations', {
+        params: {
+            keyword: keyword.value,
+            page
+        }
+    }).then((res, rej) => {
+        items.value = res.data.data;
+    }).finally(() => {
+        loading.value = false;
+    })
+}, 500)
+
+const openAddEdit = (item) => {
+    quotation.value = item;
+    openAddEditDialog.value = true
+}
+
+const openDelete = (item) => {
+    if(confirm("Delete this quotation")) {
+        axios.delete(`/api/quotations/${item.id}`).then((res, rej) => {
+            items.value = items.value.filter(q => q.id !== item.id);
+        });
     }
 }
+
+const openInNew = (item) => {
+    route.push({
+        name: 'editQuotation',
+        params: {
+            quotationId: item.id
+        }
+    });
+}
+
+const updateItems = (data) => {
+    if(data.action == 'create') {
+        items.value.unshift(data.quotation);
+        openInNew(data.quotation);
+    } else {
+        let index = items.value.findIndex(item => item.id === data.quotation.id);
+
+        if (index !== -1) {
+            items.value[index] = { ...items.value[index], ...data.quotation };
+        }
+    }
+}
+
+onInput()
 </script>

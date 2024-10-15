@@ -35,78 +35,134 @@
         </v-card>
     </form>
 </template>
-<script>
-export default {
-    props: {
-        quotationId: {
-            type: String,
-            required: true
-        },
-        product: {
-            type: Object,
-            required: true
-        },
-        quotationProduct: {
-            type: [Object, null],
-            required: true
-        }
-    },
-    data: () => {
-        return {
-            discount: null,
-            quantity: 1,
-            action: 'create',
-            excludedBullets: []
-        }
-    },
-    methods: {
-        submit() {
-            let productBulletIds = this.product.bullets.filter (
-                item => !this.excludedBullets.includes(item)
-            ).map(item => item.id)
-            this.$store.dispatch('post', {
-                tag: 'save-quotation-product',
-                url: `/api/quotation-products/${this.quotationId}/${this.action}`,
-                formData: {
-                    product_id: this.product.id,
-                    quantity: this.quantity,
-                    discount: this.discount,
-                    productBulletIds
-                }
-            });
+<script setup>
+import { ref, watch, defineProps, defineEmits } from 'vue'
 
-            // this.$emit('ok', {
-            //     productId: this.product.id,
-            //     quantity: this.quantity,
-            //     discount: this.discount,
-            // })
-        },
-        excludeToggle(bullet) {
-            if (this.excludedBullets.includes(bullet)) {
-                this.excludedBullets = this.excludedBullets.filter(item => item.id != bullet.id)
-            } else {
-                this.excludedBullets.push(bullet)
-            }
-        },
-        deleted(bullet) {
-            return this.excludedBullets.includes(bullet)
-        }
+const props = defineProps({
+    quotationId: {
+        type: String,
+        required: true
     },
-    watch: {
-        quotationProduct: {
-            handler(newVal) {
-                if(newVal) {
-                    this.discount = newVal.discount
-                    this.quantity = newVal.quantity
-                    this.action = 'update'
-                } else {
-                    this.discount = 0
-                    this.quantity = 1
-                    this.action = 'create'
-                }
-            },
-            immediate: true
-        }
+    product: {
+        type: Object,
+        required: true
+    },
+    quotationProduct: {
+        type: [Object, null],
+        required: true
+    }
+})
+
+let action = 'create'
+
+const discount = ref(null)
+const quantity = ref(1)
+const excludedBullets = ref([])
+
+const saving = ref(false)
+
+const submit = async() => {
+    saving.value = true
+    let productBulletIds = props.product.bullets.filter (
+        item => !excludedBullets.value.includes(item)
+    ).map(item => item.id)
+
+    axios.post(`/api/quotation-products/${props.quotationId}/${action}`, {
+        product_id: props.product.id,
+        quantity: quantity.value,
+        discount: discount.value,
+        productBulletIds
+    }).then(res => {
+
+    }).finally(() => {
+        saving.value = false
+    })
+}
+
+const excludeToggle = (bullet) => {
+    const ex_bullets = excludedBullets.value
+    if (ex_bullets.includes(bullet)) {
+        ex_bullets = ex_bullets.filter(item => item.id != bullet.id)
+    } else {
+        ex_bullets.push(bullet)
     }
 }
+const deleted = (bullet) => {
+    return excludedBullets.value.includes(bullet)
+}
+
+
+// export default {
+//     props: {
+//         quotationId: {
+//             type: String,
+//             required: true
+//         },
+//         product: {
+//             type: Object,
+//             required: true
+//         },
+//         quotationProduct: {
+//             type: [Object, null],
+//             required: true
+//         }
+//     },
+//     data: () => {
+//         return {
+//             discount: null,
+//             quantity: 1,
+//             action: 'create',
+//             excludedBullets: []
+//         }
+//     },
+//     methods: {
+//         submit() {
+//             let productBulletIds = this.product.bullets.filter (
+//                 item => !this.excludedBullets.includes(item)
+//             ).map(item => item.id)
+//             this.$store.dispatch('post', {
+//                 tag: 'save-quotation-product',
+//                 url: `/api/quotation-products/${this.quotationId}/${this.action}`,
+//                 formData: {
+//                     product_id: this.product.id,
+//                     quantity: this.quantity,
+//                     discount: this.discount,
+//                     productBulletIds
+//                 }
+//             });
+
+//             // this.$emit('ok', {
+//             //     productId: this.product.id,
+//             //     quantity: this.quantity,
+//             //     discount: this.discount,
+//             // })
+//         },
+//         excludeToggle(bullet) {
+//             if (this.excludedBullets.includes(bullet)) {
+//                 this.excludedBullets = this.excludedBullets.filter(item => item.id != bullet.id)
+//             } else {
+//                 this.excludedBullets.push(bullet)
+//             }
+//         },
+//         deleted(bullet) {
+//             return this.excludedBullets.includes(bullet)
+//         }
+//     },
+//     watch: {
+//         quotationProduct: {
+//             handler(newVal) {
+//                 if(newVal) {
+//                     this.discount = newVal.discount
+//                     this.quantity = newVal.quantity
+//                     this.action = 'update'
+//                 } else {
+//                     this.discount = 0
+//                     this.quantity = 1
+//                     this.action = 'create'
+//                 }
+//             },
+//             immediate: true
+//         }
+//     }
+// }
 </script>

@@ -4,23 +4,23 @@
             <v-card>
                 <v-card-title>{{action}} product bullet</v-card-title>
                 <v-card-text>
-                    <v-select label="Bullet type" :items="['simple', 'item']" v-model="formData.bullet_type" variant="outlined" :error-messages="errors.get('bullet_type')"></v-select>
-                    <v-text-field class="my-4" v-model="formData.description" label="Description" variant="outlined" :error-messages="errors.get('description')"/>
+                    <v-select label="Bullet type" :items="bulletTypes" v-model="formData.bullet_type" variant="outlined" :error-messages="errors.get('save-bullet.bullet_type')"></v-select>
+                    <v-text-field class="my-4" v-model="formData.description" label="Description" variant="outlined" :error-messages="errors.get('save-bullet.description')"/>
                     <v-expand-transition>
                         <div v-if="formData.bullet_type == 'item'">
                             <v-row>
                                 <v-col cols="4">
-                                    <v-combobox
+                                    <v-select
                                         class="my-4"
                                         v-model="formData.unit"
                                         label="Unit"
                                         variant="outlined"
                                         :items="units"
-                                        :error-messages="errors.get('unit')"
-                                    ></v-combobox>
+                                        :error-messages="errors.get('save-bullet.unit')"
+                                    ></v-select>
                                 </v-col>
                                 <v-col cols="8">
-                                    <v-text-field class="my-4" v-model="formData.quantity" type="number" label="Quantity" variant="outlined" :error-messages="errors.get('quantity')"/>
+                                    <v-text-field class="my-4" v-model="formData.quantity" type="number" label="Quantity" variant="outlined" :error-messages="errors.get('save-bullet.quantity')"/>
                                 </v-col>
                             </v-row>
                         </div>
@@ -36,89 +36,78 @@
     </div>
 </template>
 
-<script>
-export default {
-    props: {
-        bullet: {
-            type: [Object, null],
-            required: true
-        },
-        productId: {
-            type: String,
-            required: true
-        },
-        stackOrder: {
-            type: Number,
-            required: true
-        }
-    },
-    data() {
-        return {
-            action: 'create',
-            formData: {
-                description: null,
-                quantity: null,
-                unit: null,
-                bullet_type: 'simple',
-            }
-        }
-    },
-    methods: {
-        submit() {
-            let url = this.bullet ? `/api/product-bullets/${this.bullet.id}/update` : `/api/product-bullets/${this.productId}/create`
+<script setup>
+import { ref, computed, watch, defineProps, defineEmits } from 'vue'
+import { useRequestStore } from '@/store/requestStore.js'
+import { useMscStore } from '@/store/mscStore'
 
-            if(this.action == 'create') {
-                this.formData.stack_order = this.stackOrder;
-            }
-
-            this.$store.dispatch('post', {
-                tag: 'save-product-bullet',
-                url,
-                formData: this.formData
-            }).then((res, rej) => {
-                this.$emit('close');
-                this.$emit('save', {
-                    action: this.action,
-                    bullet: res.data
-                });
-            });
-        }
+const props = defineProps({
+    bullet: {
+        type: [Object, null],
+        required: true
     },
-    computed: {
-        errors() {
-            return this.$store.getters.getErrors;
-        },
-        currencyCodes() {
-            return this.$store.getters['msc/getCurrencyCodes'];
-        },
-        units() {
-            return this.$store.getters['msc/getUnits'];
-        },
-        bulletTypes() {
-            return this.$store.getters['msc/getBulletTypes'];
-        }
+    productId: {
+        type: String,
+        required: true
     },
-    watch: {
-        bullet: {
-            handler(newVal, oldVal) {
-                if(newVal) {
-                    this.formData.description = newVal.description;
-                    this.formData.quantity = newVal.quantity;
-                    this.formData.unit = newVal.unit;
-                    this.formData.bullet_type = newVal.bullet_type;
-                    this.formData.stack_order = newVal.stack_order;
-                    this.action = 'update'
-                } else {
-                    this.formData.description = null;
-                    this.formData.unit = null;
-                    this.formData.unit_price = null;
-                    this.formData.bullet_type = 'simple';
-                    this.action = 'create'
-                }
-            },
-            deep: true,
-            immediate: true
-        }
+    stackOrder: {
+        type: Number,
+        required: true
     }
+})
+
+const errors = useRequestStore()
+const emit = defineEmits(['close', 'save'])
+const mscStore = useMscStore()
+let action = 'create'
+const saving = ref(false)
+const formData = ref({
+    description: null,
+    quantity: null,
+    unit: null,
+    bullet_type: 'simple',
+})
+
+const submit = () => {
+    errors.clear()
+    saving.value = true
+
+    let url = (props.bullet ? `/api/product-bullets/${props.bullet.id}/update` : `/api/product-bullets/${props.productId}/create`) + '?tag=save-bullet'
+
+    if(action == 'create') {
+        formData.value.stack_order = props.stackOrder;
+    }
+
+    axios.post(url, formData.value).then(res => {
+        emit('close');
+        emit('save', {
+            action,
+            bullet: res.data
+        });
+    }).finally(() => {
+        saving.value = false
+    })
 }
+
+const units = computed(() => mscStore.units)
+const bulletTypes = computed(() => mscStore.bulletTypes)
+
+watch(() => props.bullet, (newVal) => {
+    if(newVal) {
+        formData.value.description = newVal.description;
+        formData.value.quantity = newVal.quantity;
+        formData.value.unit = newVal.unit;
+        formData.value.bullet_type = newVal.bullet_type;
+        formData.value.stack_order = newVal.stack_order;
+        action = 'update'
+    } else {
+        formData.value.description = null;
+        formData.value.unit = null;
+        formData.value.unit_price = null;
+        formData.value.bullet_type = 'simple';
+        action = 'create'
+    }
+}, {immediate: true})
+
+errors.clear()
 </script>

@@ -42,6 +42,91 @@
 </template>
 <script>
 import CustomerForm from './CustomerForm.vue';
+
+import { ref } from 'vue'
+import { debounce } from 'lodash'
+
+let page = 1
+
+const customer = ref(null)
+const openAddEditDialog = ref(false)
+const keyword = ref('')
+const loading = ref(false)
+const items = ref([])
+const header = [
+    {
+        sortable: false,
+        title: 'CRN',
+        key: 'crn'
+    },
+    {
+        sortable: false,
+        title: 'Name',
+        key: 'name'
+    },
+    {
+        sortable: false,
+        title: 'Address',
+        key: 'address'
+    },
+    {
+        sortable: false,
+        title: 'Contact number',
+        key: 'contact_number'
+    },
+    {
+        sortable: false,
+        title: 'Sales Rep.',
+        key: 'sales_representative_name'
+    },
+    {
+        title: "Actions",
+        key: 'actions'
+    }
+]
+
+const onInput = debounce(() => {
+    loading.value = true
+    axios.get('/api/customers', {
+        params: {
+            keyword: keyword.value,
+            page
+        }
+    }).then((res, rej) => {
+        items.value = res.data.data;
+    }).finally(() => {
+        loading.value = false;
+    })
+}, 500)
+
+const openAddEdit = (item) => {
+    customer.value = item
+    openAddEditDialog.value = true
+}
+
+const openDelete = (item) => {
+    if(confirm("Delete this customer")) {
+        axios.delete(`/api/customers/${item.id}`).then((res, rej) => {
+            items.value = items.value.filter(c => c.id !== item.id);
+        });
+    }
+}
+
+const updateItems = (data) => {
+    if(data.action == 'create') {
+        items.value.push(data.customer);
+        customer.value = data.customer;
+    } else {
+        let index = items.value.findIndex(item => item.id === data.customer.id);
+
+        if (index !== -1) {
+            items.value[index] = { ...items.value[index], ...data.customer };
+        }
+    }
+}
+
+onInput()
+
 export default {
     components: {
         CustomerForm

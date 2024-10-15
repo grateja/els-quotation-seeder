@@ -1,9 +1,14 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { ref } from 'vue'
+// import { useMainStore } from "./store/mainStore";
 
 import _404 from './components/_404.vue'
 import MainBody from './components/MainBody.vue'
 import Login from './components/auth/Login.vue'
 import Register from './components/register/Index.vue'
+
+import ProductLines from './components/product-lines/Index.vue'
+import ProductLineProducts from './components/product-lines/products/Index.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -16,14 +21,14 @@ const router = createRouter({
                 {
                     path: 'product-lines',
                     name: 'productLines',
-                    component: () => import('./components/product-lines/Index.vue'),
+                    component: ProductLines,
                     meta: {displayName: 'Product lines'},
                     children: [
                         {
                             path: ':id',
                             name: 'productLine',
                             meta: {displayName: 'Products'},
-                            component: () => import('./components/product-lines/products/Index.vue')
+                            component: ProductLineProducts
                         }
                     ]
                 },
@@ -52,7 +57,7 @@ const router = createRouter({
                     meta: {displayName: 'Quotations'},
                     children: [
                         {
-                            path: ':id/edit',
+                            path: ':quotationId/edit',
                             name: 'editQuotation',
                             component: () => import('./components/quotations/EditItems.vue'),
                             meta: {displayName: 'Edit quotation'},
@@ -79,4 +84,17 @@ const router = createRouter({
 	]
 })
 
-export default router
+const navigating = ref(false)
+
+router.beforeEach((to, from, next) => {
+    navigating.value = true
+    // useMainStore().updateNavigationState(true)
+    next();
+});
+
+router.afterEach(() => {
+    navigating.value = false
+    // useMainStore().updateNavigationState(false)
+})
+
+export { router, navigating }

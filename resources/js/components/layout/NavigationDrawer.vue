@@ -1,5 +1,8 @@
 <template>
     <v-app>
+        <teleport to="body">
+            <v-progress-linear indeterminate absolute style="top: 0; z-index: 9999;" color="red" v-if="navigating" />
+        </teleport>
         <v-navigation-drawer
             v-model="drawer"
             app
@@ -19,48 +22,54 @@
             <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
             <v-toolbar-title>{{$route.meta.displayName}}</v-toolbar-title>
             <v-spacer/>
-            <v-btn @click="logout">logout</v-btn>
+            <v-btn v-if="currentUser">{{ currentUser.name }}</v-btn>
+            <v-btn @click="logout" :loading="loading">logout</v-btn>
         </v-app-bar>
         <v-main>
-            {{loadingKeys}}
             <router-view/>
         </v-main>
     </v-app>
 </template>
 
-  <script>
-  export default {
-    data: () => ({
-        title: 'Home',
-      drawer: false,
-      items: [
-        { title: 'Product lines', to: '/product-lines' },
-        { title: 'Sales Representative', to: '/sales-representatives' },
-        { title: 'Customers', to: '/customers' },
-        { title: 'Quotations', to: '/quotations' },
-        // Add more items as needed
-      ],
-    }),
-    methods: {
-        logout() {
-            this.$store.dispatch('auth/logout').then((res, rej) => {
-                this.$router.push({
-                    name: 'login'
-                })
-            })
-        }
-    },
-    computed: {
-        currentUser() {
-            return this.$store.getters.getCurrentUser;
-        },
-        loadingKeys() {
-            return this.$store.getters.loadingKeys;
-        }
-    }
-  };
-  </script>
+<script setup>
+import { ref, computed } from 'vue'
+import { useAuthStore } from '@/store/authStore.js'
+import { navigating } from '@/router.js'
+import { useRouter } from 'vue-router'
 
-  <style scoped>
-  /* Add any custom styles here */
-  </style>
+const authStore = useAuthStore()
+
+const currentUser = computed(() => authStore.currentUser)
+const router = useRouter()
+
+const drawer = ref(false)
+const loading = ref(false)
+const items = [
+    { title: 'Product lines', to: '/product-lines' },
+    { title: 'Sales Representative', to: '/sales-representatives' },
+    { title: 'Customers', to: '/customers' },
+    { title: 'Quotations', to: '/quotations' },
+];
+
+const logout = async () => {
+    loading.value = true
+    axios.post('/api/auth/logout').then(res => {
+        router.push({
+            name: 'login'
+        })
+    }).finally(() => {
+        loading.value = false
+    })
+}
+
+axios.get('/api/auth/check').then(res => {
+    authStore.setUser(res.data)
+}).catch(err => {
+    router.push({name: 'login'})
+})
+
+</script>
+
+<style scoped>
+/* Add any custom styles here */
+</style>

@@ -55,124 +55,109 @@
         </v-dialog>
     </div>
 </template>
-<script>
+<script setup>
+import { ref, computed, watch } from 'vue'
+import { debounce } from 'lodash'
+import { useRoute } from 'vue-router'
+
 import ProductForm from './ProductForm.vue';
 
-export default {
-    components: { ProductForm },
-    data: () => {
-        return {
-            openProduct: false,
-            product: null,
-            keyword: '',
-            loading: false,
-            productLine: null,
-            products: [],
-            header: [
-                {
-                    sortable: false,
-                    title: 'Model',
-                    key: 'model'
-                },
-                {
-                    sortable: false,
-                    title: 'Brand',
-                    key: 'brand'
-                },
-                {
-                    sortable: false,
-                    title: 'Name',
-                    key: 'name'
-                },
-                {
-                    sortable: false,
-                    title: 'Price',
-                    key: 'price'
-                },
-                {
-                    title: "Actions",
-                    key: 'actions'
-                }
-            ]
-        }
-    },
-    methods: {
-        getProductLine(productLineId) {
-            this.loading = true;
-            axios.get(`/api/product-lines/${productLineId}/full`).then((res, rej) => {
-                this.productLine = res.data.productLine;
-            }).finally(() => {
-                this.loading = false;
-            });
-        },
-        onInput() {
-            this.debouncedLoadData();
-        },
-        loadProducts() {
-            this.loading = true;
-            if(this.productLine) {
-                axios.get(`/api/products/${this.productLine.id}`, {
-                    params: {
-                        keyword: this.keyword
-                    }
-                }).then((res, rej) => {
-                    this.products = res.data.data;
-                }).finally(() => {
-                    this.loading = false;
-                })
-            }
-        },
-        updateItems(data) {
-            if(data.action == 'create') {
-                this.products.push(data.product);
-                this.product = data.product;
-            } else {
-                let index = this.products.findIndex(item => item.id === data.product.id);
+const router = useRoute()
 
-                if (index !== -1) {
-                    this.products[index] = { ...this.products[index], ...data.product };
-                }
-            }
-        },
-        openAddEdit(product) {
-            this.product = product;
-            this.openProduct = true
-        },
-        openDelete(product) {
-            if(confirm("Delete this product")) {
-                axios.delete(`/api/products/${product.id}`).then((res, rej) => {
-                    this.products = this.products.filter(item => item.id !== product.id);
-                });
-            }
+const openProduct = ref(false)
+const product = ref(null)
+const keyword = ref('')
+const loading = ref(false)
+const products = ref([])
+const productLine = ref(null)
+const header = ref([
+    {
+        sortable: false,
+        title: 'Model',
+        key: 'model'
+    },
+    {
+        sortable: false,
+        title: 'Brand',
+        key: 'brand'
+    },
+    {
+        sortable: false,
+        title: 'Name',
+        key: 'name'
+    },
+    {
+        sortable: false,
+        title: 'Price',
+        key: 'price'
+    },
+    {
+        title: "Actions",
+        key: 'actions'
+    }
+])
+
+const loadProducts = async (productLineId) => {
+    axios.get(`/api/products/${productLineId}`, {
+        params: {
+            keyword: keyword.value
         }
-    },
-    computed: {
-        productLineId() {
-            return this.$route.params.id
-        }
-    },
-    created() {
-        this.debouncedLoadData = this.$debounce(this.loadProducts, 500);
-        this.loadProducts();
-    },
-    watch: {
-        productLineId: {
-            handler(value) {
-                if(value) {
-                    this.getProductLine(value)
-                }
-            },
-            immediate: true
-        },
-        productLine: {
-            handler(value) {
-                if(value != null) {
-                    this.$route.meta.displayName = value.name;
-                    this.loadProducts();
-                }
-            },
-            immediate: true
+    }).then((res, rej) => {
+        products.value = res.data.data;
+    }).finally(() => {
+        loading.value = false;
+    })
+}
+
+const getProductLine = async (productLineId) => {
+    loading.value = true;
+    axios.get(`/api/product-lines/${productLineId}/full`).then((res, rej) => {
+        productLine.value = res.data.productLine;
+        loadProducts(productLineId)
+    }).finally(() => {
+        loading.value = false;
+    });
+}
+
+const onInput = debounce(() => {
+    loading.value = true;
+    if(productLine.value) {
+        loadProducts(productLine.value.id)
+    }
+}, 500)
+
+const updateItems = (data) => {
+    console.log('update items')
+    if(data.action == 'create') {
+        products.value.push(data.product);
+        product.value = data.product;
+    } else {
+        let index = products.value.findIndex(item => item.id === data.product.id);
+
+        if (index !== -1) {
+            products.value[index] = { ...products.value[index], ...data.product };
         }
     }
 }
+
+const openAddEdit = (item) => {
+    product.value = item;
+    openProduct.value = true
+}
+
+const openDelete = (product) => {
+    if(confirm("Delete this product")) {
+        axios.delete(`/api/products/${product.id}`).then((res, rej) => {
+            products.value = products.value.filter(item => item.id !== product.id);
+        });
+    }
+}
+
+const productLineId = computed(() => router.params.id)
+
+watch(productLineId, (newId) => {
+    if(newId) {
+        getProductLine(newId)
+    }
+}, { immediate: true })
 </script>

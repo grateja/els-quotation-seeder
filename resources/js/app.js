@@ -6,8 +6,9 @@
 
 import './bootstrap';
 import { createApp } from 'vue';
+import { createPinia } from 'pinia';
 import Vuetify from './vuetify';
-import router from './router';
+import { router } from './router';
 import vuex from './store/store';
 import moment from 'moment';
 import debounce from 'lodash/debounce';
@@ -21,6 +22,7 @@ import debounce from 'lodash/debounce';
 
 const app = createApp({});
 
+app.use(createPinia())
 app.use(Vuetify);
 app.use(router);
 app.use(vuex);

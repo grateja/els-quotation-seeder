@@ -6,49 +6,64 @@
                     <span class="title">Login</span>
                 </v-card-title>
                 <v-card-text>
-                    <v-text-field type="email"  name="email" v-model="formData.email" variant="outlined" label="Email" :error-messages="errors.get('email')" class="ma-2" />
-                    <v-text-field type="password"  name="password" v-model="formData.password" variant="outlined" label="Password" :error-messages="errors.get('password')" class="ma-2" />
-                    <v-btn :loading="loadingKeys.hasAny('logging-in')" round type="submit" color="primary" class="ma-2">Log in</v-btn>
+                    <v-text-field
+                        v-model="formData.email"
+                        :error-messages="errors.get('auth.email')"
+                        type="email"
+                        name="email"
+                        variant="outlined"
+                        label="Email"
+                        class="ma-2" />
+
+                    <v-text-field
+                        v-model="formData.password"
+                        :error-messages="errors.get('auth.password')"
+                        type="password"
+                        name="password"
+                        variant="outlined"
+                        label="Password"
+                        class="ma-2" />
+                    <div class="d-flex align-center justify-space-between">
+                        <v-btn round
+                            :loading="loading"
+                            type="submit"
+                            color="primary"
+                            class="ma-2">Log in
+                        </v-btn>
+                        <router-link :to="{name: 'register'}">Register</router-link>
+                    </div>
                 </v-card-text>
             </v-card>
         </form>
 	</v-container>
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				formData: {
-					email: null,
-					password: null
-				}
-			}
-		},
-        methods: {
-            login() {
-                this.$store.dispatch('auth/login', this.formData).then((res) => {
-                    this.$router.push({name:'home'})
-                });
-                // this.$store.dispatch('post', {
-                //     tag: 'login',
-                //     url: 'auth/login',
-                //     formData: this.formData,
-                // }).then((res, rej) => {
-                //     localStorage.setItem('sanctum_token', res.data.token.plainTextToken);
-                //     localStorage.setItem('token_name', res.data.token.accessToken.name);
-                //     // console.log("plain text token", res.data.token.plainTextToken);
-                //     this.$router.push('/');
-                // })
-            }
-        },
-        computed: {
-            errors () {
-                return this.$store.getters.getErrors;
-            },
-            loadingKeys () {
-                return this.$store.getters.loadingKeys;
-            }
-        }
-	}
+<script setup>
+import { ref } from 'vue'
+import { useRequestStore } from '@/store/requestStore.js'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const errors = useRequestStore()
+errors.clear()
+
+const loading = ref(false)
+
+const formData = ref({
+    email: null,
+    password: null,
+    tag: 'auth'
+})
+
+const login = async () => {
+    loading.value = true
+    errors.clear()
+    axios.post(`/api/auth/login?tag=auth`, formData.value).then(res => {
+        router.push('/');
+    }).finally(() => {
+        loading.value = false
+        errors.clear()
+    })
+}
+
 </script>

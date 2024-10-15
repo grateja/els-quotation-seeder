@@ -39,87 +39,83 @@
         </v-dialog>
     </v-container>
 </template>
-<script>
-import SalesRepresentativeForm from './SalesRepresentativeForm.vue';
-export default {
-    components: {
-        SalesRepresentativeForm
-    },
-    data: () => {
-        return {
-            salesRep: null,
-            openSRCreator: false,
-            page: 1,
-            keyword: '',
-            loading: false,
-            items: [],
-            header: [
-                {
-                    sortable: false,
-                    title: 'Initials',
-                    key: 'initials'
-                },
-                {
-                    sortable: false,
-                    title: 'Name',
-                    key: 'name'
-                },
-                {
-                    sortable: false,
-                    title: 'Department',
-                    key: 'department'
-                },
-                {
-                    title: "Actions",
-                    key: 'actions'
-                }
-            ]
-        }
-    },
-    methods: {
-        onInput() {
-            this.debouncedLoadData()
-        },
-        loadData() {
-            this.loading = true;
-            axios.get('/api/sales-representatives', {
-                params: {
-                    keyword: this.keyword,
-                    page: this.page
-                }
-            }).then((res, rej) => {
-                this.items = res.data.data;
-            }).finally(() => {
-                this.loading = false;
-            })
-        },
-        openAddEdit(salesRep) {
-            this.salesRep = salesRep;
-            this.openSRCreator = true;
-        },
-        openDelete(salesRep) {
-            if(confirm("Delete this sales representative")) {
-                axios.delete(`/api/sales-representatives/${salesRep.id}`).then((res, rej) => {
-                    this.items = this.items.filter(item => item.id !== salesRep.id);
-                });
-            }
-        },
-        updateItems(data) {
-            if(data.action == 'create') {
-                this.items.push(data.salesRepresentative);
-                this.salesRep = data.salesRepresentative;
-            } else {
-                let index = this.items.findIndex(item => item.id === data.salesRepresentative.id);
+<script setup>
+import { ref } from 'vue'
+import { debounce } from 'lodash'
 
-                if (index !== -1) {
-                    this.items[index] = { ...this.items[index], ...data.salesRepresentative };
-                }
-            }
-        }
+import SalesRepresentativeForm from './SalesRepresentativeForm.vue';
+
+let page = 1
+
+const salesRep = ref(null)
+const openSRCreator = ref(false)
+const keyword = ref('')
+const loading = ref(false)
+const items = ref([])
+const header = [
+    {
+        sortable: false,
+        title: 'Initials',
+        key: 'initials'
     },
-    created() {
-        this.debouncedLoadData = this.$debounce(this.loadData, 500);
-        this.loadData();
+    {
+        sortable: false,
+        title: 'Name',
+        key: 'name'
+    },
+    {
+        sortable: false,
+        title: 'Department',
+        key: 'department'
+    },
+    {
+        title: "Actions",
+        key: 'actions'
+    }
+];
+
+const loadData = async () => {
+    loading.value = true;
+    axios.get('/api/sales-representatives', {
+        params: {
+            keyword: keyword.value,
+            page
+        }
+    }).then((res, rej) => {
+        items.value = res.data.data;
+    }).finally(() => {
+        loading.value = false;
+    })
+}
+loadData()
+
+const onInput = debounce(() => {
+    loadData()
+}, 500)
+
+const openAddEdit = (item) => {
+    salesRep.value = item
+    openSRCreator.value = true
+}
+
+const openDelete = (item) => {
+    if(confirm("Delete this sales representative")) {
+        axios.delete(`/api/sales-representatives/${item.id}`).then((res, rej) => {
+            items.value = items.value.filter(sr => sr.id !== item.id);
+        });
+    }
+}
+
+const updateItems = (data) => {
+    if(data.action == 'create') {
+        items.value.push(data.salesRepresentative);
+        salesRep.value = data.salesRepresentative;
+    } else {
+        let index = items.value.findIndex(item => item.id === data.salesRepresentative.id);
+
+        if (index !== -1) {
+            items.value[index] = { ...items.value[index], ...data.salesRepresentative };
+        }
     }
 }
 </script>

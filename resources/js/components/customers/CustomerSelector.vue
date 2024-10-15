@@ -9,7 +9,7 @@
                     append-inner-icon="mdi-magnify"
                     placeholder="Type customer name"
                     variant="outlined"
-                    :loading="loadingKeys.hasAny('get-customers')"
+                    :loading="loading"
                     @input="onInput"
                 />
                 <v-list>
@@ -30,56 +30,40 @@
         </v-card>
     </div>
 </template>
-<script>
-export default {
-    props: [
-        'model'
-    ],
-    data: () => {
-        return {
-            keyword: '',
-            items: []
+<script setup>
+import { ref, defineProps, defineEmits } from 'vue';
+import { debounce } from 'lodash'
+
+const props = defineProps(['model'])
+const emit = defineEmits(['select', 'close'])
+
+const keyword = ref('')
+const items = ref([])
+const loading = ref(false)
+let page = 1
+
+const onInput = debounce(() => {
+    loading.value = true
+    axios.get('/api/customers', {
+        params: {
+            keyword: keyword.value,
+            page
         }
-    },
-    methods: {
-        onInput() {
-            this.debouncedLoadData();
-        },
-        loadData() {
-            this.$store.dispatch('get', {
-                url: '/api/customers',
-                tag: 'get-customers',
-                formData: {
-                    keyword: this.keyword
-                }
-            })
-            // axios.get('/api/customers', {
-            //     params: {
-            //         keyword: this.keyword
-            //     }
-            // })
-            .then((res, rej) => {
-                this.items = res.data.data;
-            });
-        },
-        select(data) {
-            this.$emit('select', data);
-            this.$emit('close');
-        },
-        close() {
-            this.$emit('close');
-        }
-    },
-    computed: {
-        loadingKeys() {
-            return this.$store.getters.loadingKeys;
-        }
-    },
-    created() {
-        this.debouncedLoadData = this.$debounce(this.loadData, 100);
-        this.loadData();
-    }
+    }).then(res => items.value = res.data.data).finally(() => {
+        loading.value = false
+    })
+}, 500)
+
+const select = (data) => {
+    emit('select', data)
+    close()
 }
+
+const close = () => {
+    emit('close')
+}
+
+onInput()
 </script>
 
 <style scoped>

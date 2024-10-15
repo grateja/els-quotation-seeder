@@ -23,7 +23,7 @@ const store = createStore({
             state.loadingKeys.remove(tag);
         },
         setErrors(state, errors) {
-            state.errorKeys.errors = errors;
+            state.errorKeys.setErrors(errors);
         },
         clearErrors(state, key) {
             state.errorKeys.clear(key);

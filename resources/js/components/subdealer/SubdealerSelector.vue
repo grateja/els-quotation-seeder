@@ -4,9 +4,9 @@
             <v-card-title>Select subdealer</v-card-title>
             <v-card-text>
                 <v-btn @click="select(null)" color="primary" class="my-4">Create new</v-btn>
-                <v-text-field :loading="loadingKeys.hasAny('get-subdealers')" variant="outlined" v-model="keyword" @input="onInput" append-inner-icon="mdi-magnify" placeholder="Type name" />
+                <v-text-field :loading="loading" variant="outlined" v-model="keyword" @input="onInput" append-inner-icon="mdi-magnify" placeholder="Type name" />
                 <v-list>
-                    <v-list-item :class="{ 'highlighted': model && subdealer.id == model.id }" v-for="(subdealer, index) in items" :key="subdealer.id" @click="select(subdealer)">
+                    <v-list-item :class="{ 'highlighted': selected(subdealer) }" v-for="(subdealer, index) in items" :key="subdealer.id" @click="select(subdealer)">
                         <v-list-item-title>
                             {{ subdealer.alias }}
                         </v-list-item-title>
@@ -19,56 +19,44 @@
         </v-card>
     </div>
 </template>
-<script>
-export default {
-    props: [
-        'model'
-    ],
-    data: () => {
-        return {
-            keyword: '',
-            items: []
+<script setup>
+import { ref, defineProps, defineEmits } from 'vue'
+import { debounce } from 'lodash'
+
+const props = defineProps(['model'])
+const emit = defineEmits(['select', 'close'])
+
+const keyword = ref('')
+const items = ref([])
+const loading = ref(false)
+
+const onInput = debounce(async () => {
+    loading.value = true
+    axios.get('/api/subdealers', {
+        params: {
+            keyword: keyword.value
         }
-    },
-    methods: {
-        onInput() {
-            this.debouncedLoadData();
-        },
-        loadData() {
-            this.$store.dispatch('get', {
-                url: '/api/subdealers',
-                tag: 'get-subdealers',
-                formData: {
-                    keyword: this.keyword
-                }
-            })
-            // axios.get('/api/subdealers', {
-            //     params: {
-            //         keyword: this.keyword
-            //     }
-            // })
-            .then((res, rej) => {
-                this.items = res.data.data;
-            });
-        },
-        select(data) {
-            this.$emit('select', data);
-            this.$emit('close');
-        },
-        close() {
-            this.$emit('close');
-        }
-    },
-    computed: {
-        loadingKeys() {
-            return this.$store.state.loadingKeys;
-        }
-    },
-    created() {
-        this.debouncedLoadData = this.$debounce(this.loadData, 100);
-        this.loadData();
-    }
+    }).then(res => {
+        items.value = res.data.data
+    }).finally(() => {
+        loading.value = false
+    })
+}, 500)
+
+const close = () => {
+    emit('close');
 }
+
+const select = (data) => {
+    emit('select', data);
+    close()
+}
+
+const selected = (item) => {
+    return props.model != null && item.id == props.model.id
+}
+
+onInput()
 </script>
 
 <style scoped>

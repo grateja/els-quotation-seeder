@@ -1,15 +1,11 @@
-import store from './store/store.js'
-import router from './router.js'
+import { useRequestStore } from './store/requestStore.js';
 
-store.dispatch('get', {
-    tag: 'check',
-    url: '/api/auth/check',
-}).then((res, rej) => {
-    console.log(res.data)
-    store.commit('setUser', res.data, {root: true})
-}).catch(err => {
-    if(err.response && err.response.status == 401) {
-        console.log(err)
-        router.push({ name: 'login'})
+axios.interceptors.response.use(res => res, err => {
+    if(err.response && err.response.status == 422 && err.response.data.errors) {
+        useRequestStore().setErrors({
+            tag: err.response.data.tag,
+            errors: err.response.data.errors
+        });
+        return Promise.reject(err);
     }
 });
