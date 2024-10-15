@@ -42,14 +42,6 @@ class CustomersController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request) {
@@ -104,54 +96,21 @@ class CustomersController extends Controller
         return response()->json($customer);
     }
 
-    // public function store(Request $request)
-    // {
-    //     $rules = [
-    //         'name' => 'required',
-    //         'address' => 'required',
-    //         'contact_number' => 'required',
-    //         'sales_representative_id' => 'required'
-    //     ];
-
-    //     if($request->validate($rules)) {
-    //         $crn = $this->generateCRN();
-    //         $customer = Customer::create([
-    //             'crn' => $crn,
-    //             'name' => $request->name,
-    //             'address' => $request->address,
-    //             'contact_number' => $request->contact_number,
-    //             'sales_representative_id' => $request->sales_representative_id,
-    //         ]);
-
-    //         $customer['sales_representative_name'] = $customer->salesRepresentative['name'];
-
-    //         return response()->json($customer);
-    //     }
-    // }
-
     /**
      * Display the specified resource.
      */
-    public function show(string $customerId)
+    public function show(Customer $customer)
     {
-        $customer = Customer::findOrFail($customerId);
+        // $customer = Customer::findOrFail($customerId);
         return response()->json($customer);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $customerId)
+    public function update(Request $request, Customer $customer)
     {
-        $customer = Customer::findOrFail($customerId);
+        // $customer = Customer::findOrFail($customerId);
 
         $rules = [
             'name' => 'required',
@@ -206,9 +165,8 @@ class CustomersController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Customer $customer)
     {
-        $customer = Customer::findOrFail($id);
         $customer->delete();
     }
 }

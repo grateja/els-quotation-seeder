@@ -21,14 +21,6 @@ class SubdealersController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -53,24 +45,15 @@ class SubdealersController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Subdealer $subdealer)
     {
-        $subdealer = Subdealer::findOrFail($id);
         return response()->json($subdealer);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Subdealer $subdealer)
     {
         $rules = [
             'abbr' => 'required',
@@ -79,8 +62,6 @@ class SubdealersController extends Controller
         ];
 
         $request->validate($rules);
-
-        $subdealer = Subdealer::findOrFail($id);
 
         $subdealer->update($request->only([
             'abbr',
@@ -94,8 +75,8 @@ class SubdealersController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Subdealer $subdealer)
     {
-        //
+        $subdealer->delete();
     }
 }

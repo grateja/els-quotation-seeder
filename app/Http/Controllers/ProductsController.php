@@ -28,14 +28,6 @@ class ProductsController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -63,24 +55,17 @@ class ProductsController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Product $product)
     {
-        $product = Product::with('bullets')->findOrFail($id);
+        // $product = Product::with('bullets')->findOrFail($id);
+        $product->load('bullets');
         return response()->json($product);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Product $product)
     {
         $rules = [
             'name' => 'required',
@@ -89,8 +74,6 @@ class ProductsController extends Controller
         ];
 
         $request->validate($rules);
-
-        $product = Product::findOrFail($id);
 
         $product->update($request->only([
             'product_line_id',
@@ -107,9 +90,8 @@ class ProductsController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Product $product)
     {
-        $product = Product::findOrFail($id);
         $product->delete();
     }
 }

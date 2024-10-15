@@ -32,14 +32,6 @@ class QuotationsController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -105,24 +97,17 @@ class QuotationsController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $quotationId)
+    public function edit(Quotation $quotation)
     {
-        $quotation = Quotation::with(
+        $quotation->load(
             'customer',
             'subdealer',
             'salesRepresentative',
             'quotationProducts.quotationProductBullets',
             'quotationProducts'
-        )->findOrFail($quotationId);
+        );
 
         return response()->json($quotation);
     }
@@ -130,7 +115,7 @@ class QuotationsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $quotationId)
+    public function update(Request $request, Quotation $quotation)
     {
         $rules = [
             'subdealer_id' => 'nullable|exists:subdealers,id',
@@ -170,7 +155,6 @@ class QuotationsController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-        $quotation = Quotation::findOrFail($quotationId);
         $userId = auth('sanctum')->user()->id;
 
         $request->merge([
@@ -190,8 +174,8 @@ class QuotationsController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Quotation $quotation)
     {
-        //
+        $quotation->delete();
     }
 }

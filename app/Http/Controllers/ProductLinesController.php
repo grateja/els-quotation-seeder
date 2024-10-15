@@ -44,9 +44,8 @@ class ProductLinesController extends Controller
     /**
      * Display all the details related to this product line.
      */
-    public function full(string $id)
+    public function full(ProductLine $productLine)
     {
-        $productLine = ProductLine::findOrFail($id);
         return response()->json([
             'productLine' => $productLine,
         ]);

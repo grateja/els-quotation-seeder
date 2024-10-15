@@ -40,33 +40,52 @@ Route::prefix('auth')->middleware('auth:sanctum')->controller(AuthController::cl
     Route::get('check', 'check');
 });
 
+// /api/customers
+Route::prefix('customers')->middleware('auth:sanctum')->controller(CustomersController::class)->group(function() {
+    Route::get('/', 'index');
+
+    // /api/customers/{customer}
+    Route::get('{customer}', 'show');
+
+    // /api/customers/generate-crn
+    Route::get('generate-crn', 'generateCRN');
+
+    // /api/customers/create
+    Route::post('create', 'store');
+
+    // /api/customers/{customer}/update
+    Route::post('{customer}/update', 'update');
+
+    // /api/customers/{customer}
+    Route::delete('{customer}', 'destroy');
+});
 
 // /api/product-lines
 Route::prefix('product-lines')->middleware('auth:sanctum')->controller(ProductLinesController::class)->group(function() {
     Route::get('/', 'index');
 
-    // /api/product-lines/{id}/full
-    Route::get('{id}/full', 'full');
+    // /api/product-lines/{productLine}/full
+    Route::get('{productLine}/full', 'full');
 });
 
 // /api/products
 Route::prefix('products')->middleware('auth:sanctum')->controller(ProductsController::class)->group(function() {
     Route::get('{productLineId?}', 'index');
 
-    // /api/products/{productId}/details
-    Route::get('{productId}/details', 'show');
+    // /api/products/{product}/details
+    Route::get('{product}/details', 'show');
 
     // /api/product/create
     Route::post('create', 'store');
 
-    // /api/products/{id}/update
-    Route::post('{id}/update', 'update');
+    // /api/products/{product}/update
+    Route::post('{product}/update', 'update');
 
-    // /api/products/{productId}
-    Route::delete('{productId}', 'destroy');
+    // /api/products/{product}
+    Route::delete('{product}', 'destroy');
 
-    // /api/products/{productId}/add-bullet
-    Route::post('{productId}/add-bullet', 'addBullet');
+    // /api/products/{product}/add-bullet
+    Route::post('{product}/add-bullet', 'addBullet');
 });
 
 // /api/product-bullets
@@ -95,14 +114,14 @@ Route::prefix('sales-representatives')->middleware('auth:sanctum')->controller(S
     // /api/sales-representative/create
     Route::post('create', 'store');
 
-    // /api/sales-representativess/{id}/update
-    Route::post('{id}/update', 'update');
+    // /api/sales-representativess/{salesRep}/update
+    Route::post('{salesRep}/update', 'update');
 
-    // /api/sales-representativess/{id}
-    Route::get('{id}', 'show');
+    // /api/sales-representativess/{salesRep}
+    Route::get('{salesRep}', 'show');
 
-    // /api/sales-representative/{id}
-    Route::delete('{id}', 'destroy');
+    // /api/sales-representative/{salesRep}
+    Route::delete('{salesRep}', 'destroy');
 });
 
 // /api/subdealers
@@ -112,34 +131,14 @@ Route::prefix('subdealers')->middleware('auth:sanctum')->controller(SubdealersCo
     // /api/subdealers/create
     Route::post('create', 'store');
 
-    // /api/subdealers/{id}/update
-    Route::post('{id}/update', 'update');
+    // /api/subdealers/{subdealer}/update
+    Route::post('{subdealer}/update', 'update');
 
-    // /api/subdealers/{id}
-    Route::get('{id}', 'show');
+    // /api/subdealers/{subdealer}
+    Route::get('{subdealer}', 'show');
 
-    // /api/subdealers/{id}
-    Route::delete('{id}', 'destroy');
-});
-
-// /api/customers
-Route::prefix('customers')->middleware('auth:sanctum')->controller(CustomersController::class)->group(function() {
-    Route::get('/', 'index');
-
-    // /api/customers/{customerId}
-    Route::get('{customerId}', 'show');
-
-    // /api/customers/generate-crn
-    Route::get('generate-crn', 'generateCRN');
-
-    // /api/customers/create
-    Route::post('create', 'store');
-
-    // /api/customers/{customerId}/update
-    Route::post('{customerId}/update', 'update');
-
-    // /api/customers/{customerId}
-    Route::delete('{customerId}', 'destroy');
+    // /api/subdealers/{subdealer}
+    Route::delete('{subdealer}', 'destroy');
 });
 
 // /api/quotations
@@ -149,14 +148,14 @@ Route::prefix('quotations')->middleware('auth:sanctum')->controller(QuotationsCo
     // /api/quotations/create
     Route::post('create', 'store');
 
-    // /api/quotations/{quotationId}/update
-    Route::post('{quotationId}/update', 'update');
+    // /api/quotations/{quotation}/update
+    Route::post('{quotation}/update', 'update');
 
-    // /api/quotations/{quotationId}/edit
-    Route::get('{quotationId}/edit', 'edit');
+    // /api/quotations/{quotation}/edit
+    Route::get('{quotation}/edit', 'edit');
 
-    // /api/quotations/{quotationId}
-    Route::delete('{quotationId}', 'destroy');
+    // /api/quotations/{quotation}
+    Route::delete('{quotation}', 'destroy');
 });
 
 // /api/quotation-products

@@ -19,14 +19,6 @@ class SalesRepresentativeController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -51,31 +43,21 @@ class SalesRepresentativeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(SalesRepresentative $salesRep)
     {
-        $salesRep = SalesRepresentative::findOrFail($id);
         return response()->json($salesRep);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, SalesRepresentative $salesRep)
     {
         $rules = [
             'name' => 'required',
             'initials' => 'required',
             'department' => 'required',
         ];
-        $salesRep = SalesRepresentative::findOrFail($id);
 
         if($salesRep->name != $request->name) {
             $rules['name'] = 'required|unique:sales_representatives';
@@ -96,9 +78,8 @@ class SalesRepresentativeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(SalesRepresentative $salesRep)
     {
-        $salesRep = SalesRepresentative::findOrFail($id);
         $salesRep->delete();
     }
 }
